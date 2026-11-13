@@ -262,7 +262,12 @@ func TestEventsAndSessions(t *testing.T) {
 	if err != nil || len(events) != 1 {
 		t.Fatalf("事件列表应返回 1 条，实际 %d（%v）", len(events), err)
 	}
-	anomalies, err := st.ListAnomalyEvents(ctx, 0)
+	anomalyKinds := []string{
+		domain.EventCallbackDuplicate, domain.EventCallbackConflict, domain.EventLateResultIgnored,
+		domain.EventSignatureInvalid, domain.EventCallbackUnknown, domain.EventGenerationRejected,
+		domain.EventGenerationFailed, domain.EventGenerationTimeout,
+	}
+	anomalies, err := st.ListAnomalyEvents(ctx, anomalyKinds, 0)
 	if err != nil || len(anomalies) != 0 {
 		t.Fatalf("普通事件不应出现在异常列表，实际 %d（%v）", len(anomalies), err)
 	}
@@ -271,9 +276,13 @@ func TestEventsAndSessions(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("写入异常事件失败: %v", err)
 	}
-	anomalies, _ = st.ListAnomalyEvents(ctx, 0)
+	anomalies, _ = st.ListAnomalyEvents(ctx, anomalyKinds, 0)
 	if len(anomalies) != 1 {
 		t.Fatalf("异常列表应返回 1 条，实际 %d", len(anomalies))
+	}
+	empty, err := st.ListAnomalyEvents(ctx, nil, 0)
+	if err != nil || len(empty) != 0 {
+		t.Fatalf("空异常清单应返回空列表，实际 %d（%v）", len(empty), err)
 	}
 	recent, err := st.ListRecentEvents(ctx, 10)
 	if err != nil || len(recent) != 2 {

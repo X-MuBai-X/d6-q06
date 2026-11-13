@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"creative-studio/internal/domain"
@@ -99,13 +100,17 @@ func (s *Store) ListEvents(ctx context.Context, requirementID string) ([]domain.
 }
 
 // ListAnomalyEvents 列出运营需要跟进的异常事件，按时间倒序。
-func (s *Store) ListAnomalyEvents(ctx context.Context, limit int) ([]domain.Event, error) {
-	query := `SELECT id, requirement_id, task_id, actor_id, actor_role, kind, detail, created_at
-		FROM events WHERE kind IN (?, ?, ?, ?, ?, ?, ?, ?) ORDER BY id DESC`
-	args := []any{
-		domain.EventCallbackDuplicate, domain.EventCallbackConflict, domain.EventLateResultIgnored,
-		domain.EventSignatureInvalid, domain.EventCallbackUnknown, domain.EventGenerationRejected,
-		domain.EventGenerationFailed, domain.EventGenerationTimeout,
+// kinds 是异常种类清单，由业务层给出（service.AnomalyKinds）；存储层不再自带重复字面量。
+func (s *Store) ListAnomalyEvents(ctx context.Context, kinds []string, limit int) ([]domain.Event, error) {
+	if len(kinds) == 0 {
+		return []domain.Event{}, nil
+	}
+	placeholders := strings.TrimSuffix(strings.Repeat("?, ", len(kinds)), ", ")
+	query := fmt.Sprintf(`SELECT id, requirement_id, task_id, actor_id, actor_role, kind, detail, created_at
+		FROM events WHERE kind IN (%s) ORDER BY id DESC`, placeholders)
+	args := make([]any, 0, len(kinds))
+	for _, k := range kinds {
+		args = append(args, k)
 	}
 	if limit > 0 {
 		query += fmt.Sprintf(" LIMIT %d", limit)

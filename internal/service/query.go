@@ -60,6 +60,7 @@ func (s *Service) RequirementDetail(ctx context.Context, actor *domain.User, req
 }
 
 // ListAnomalies 返回运营需要跟进的异常记录（题面 R4：异常须可查询）。
+// 查询种类取自异常注册表 AnomalyKinds，并按注册表二次过滤，避免非异常事件混入。
 func (s *Service) ListAnomalies(ctx context.Context, actor *domain.User, limit int) ([]domain.Event, error) {
 	if actor.Role != domain.RoleOperator && actor.Role != domain.RoleReviewer {
 		return nil, fmt.Errorf("%w: 只有运营与设计复核人可以查看异常记录", domain.ErrForbidden)
@@ -67,7 +68,17 @@ func (s *Service) ListAnomalies(ctx context.Context, actor *domain.User, limit i
 	if limit <= 0 {
 		limit = 50
 	}
-	return s.store.ListAnomalyEvents(ctx, limit)
+	events, err := s.store.ListAnomalyEvents(ctx, AnomalyKinds, limit)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]domain.Event, 0, len(events))
+	for _, e := range events {
+		if IsAnomalyKind(e.Kind) {
+			out = append(out, e)
+		}
+	}
+	return out, nil
 }
 
 // OperatorOverview 是运营总览：需求状态分布、生成任务状态分布与异常计数。
@@ -101,7 +112,7 @@ func (s *Service) Overview(ctx context.Context, actor *domain.User) (*OperatorOv
 			taskCounts[t.Status]++
 		}
 	}
-	anomalies, err := s.store.ListAnomalyEvents(ctx, 0)
+	anomalies, err := s.store.ListAnomalyEvents(ctx, AnomalyKinds, 0)
 	if err != nil {
 		return nil, err
 	}

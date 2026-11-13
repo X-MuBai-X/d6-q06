@@ -107,16 +107,42 @@ def check_business_rules(ck: Checker, repo: pathlib.Path) -> None:
                 "次数上限/超时/巡检实现不完整", "补齐上限与超时巡检实现")
 
     # R4 回调鉴权、幂等与异常可查
+    # 判据说明（分层原因，修正此前把「事件类型定义位置」与「异常记录实现位置」混为一谈的缺陷）：
+    # 事件类型属于领域模型，常量集中定义在 internal/domain/types.go；
+    # 验签与异常记录的实现分别位于 internal/httpapi/server.go（验签失败记 signature_invalid）
+    # 与 internal/service/callback.go（重复回调记 callback_duplicate、未知任务记 callback_unknown_task）。
+    # 因此按各要素的真实实现位置判定，不能要求 domain 常量名字符串出现在 service 文件里。
     httpapi = read(repo, "internal/httpapi/server.go")
-    sign_ok = "VerifySignature" in httpapi and "EventSignatureInvalid" in read(repo, "internal/service/anomaly.go")
+    domain_types = read(repo, "internal/domain/types.go")
+    service_sources = ""
+    service_dir = repo / "internal/service"
+    if service_dir.exists():
+        for path in sorted(service_dir.glob("*.go")):
+            if path.name.endswith("_test.go"):
+                continue  # 测试文件不算业务实现
+            service_sources += path.read_text(encoding="utf-8", errors="replace")
+    sign_ok = "supplier.VerifySignature" in httpapi
+    sign_const_ok = re.search(r"EventSignatureInvalid\s*=", domain_types) is not None
+    sign_used_ok = ("domain.EventSignatureInvalid" in httpapi) or ("domain.EventSignatureInvalid" in service_sources)
     dup_ok = "EventCallbackDuplicate" in callback and "EventCallbackUnknown" in callback
-    if sign_ok and dup_ok:
+    missing = []
+    if not sign_ok:
+        missing.append("internal/httpapi/server.go 未调用 supplier.VerifySignature（回调缺少验签）")
+    if not sign_const_ok:
+        missing.append("internal/domain/types.go 未定义 EventSignatureInvalid")
+    if not sign_used_ok:
+        missing.append("EventSignatureInvalid 未在 internal/httpapi/server.go 或 internal/service 中用于记录异常事件")
+    if not dup_ok:
+        missing.append("internal/service/callback.go 缺少 EventCallbackDuplicate（重复回调）或 EventCallbackUnknown（未知任务回调）")
+    if not missing:
         ck.ok("R4-01", "业务规则", "R4", "回调鉴权、重复回调不重复建候选、异常可查",
-              f"internal/httpapi/server.go {line_of(httpapi, 'VerifySignature')}；"
-              f"internal/service/callback.go {line_of(callback, 'EventCallbackDuplicate')}")
+              f"internal/httpapi/server.go {line_of(httpapi, 'supplier.VerifySignature')}；"
+              f"internal/domain/types.go {line_of(domain_types, 'EventSignatureInvalid')}；"
+              f"internal/service/callback.go {line_of(callback, 'EventCallbackDuplicate')}；"
+              f"internal/service/callback.go {line_of(callback, 'EventCallbackUnknown')}")
     else:
         ck.fail("R4-01", "业务规则", "R4", "回调鉴权、重复回调不重复建候选、异常可查",
-                "回调鉴权或异常事件缺失", "补签名校验与异常事件")
+                "；".join(missing), "按缺失项补实现：" + "；".join(missing))
 
     # R5 复核原因与确认采用
     reason_ok = "ValidateReviewReason" in read(repo, "internal/domain/rules.go")
