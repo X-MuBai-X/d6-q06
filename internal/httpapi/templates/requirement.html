@@ -1,0 +1,171 @@
+{{define "requirement.html"}}<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>{{.Title}}</title>
+{{template "styles" .}}
+</head>
+<body>
+{{template "nav" .}}
+<main>
+  {{with .Data}}{{$d := .}}
+  <h1>{{$d.View.Requirement.ActivityName}}</h1>
+  {{template "flash" $}}
+
+  <div class="card">
+    <h2>需求信息</h2>
+    <table>
+      <tr><th>状态</th><td><span class="tag">{{statusLabel $d.View.Requirement.Status}}</span></td>
+          <th>用途</th><td>{{$d.View.Requirement.Purpose}}</td></tr>
+      <tr><th>当前描述</th><td colspan="3">{{$d.View.Requirement.Description}}</td></tr>
+      <tr><th>已发起生成次数</th><td>{{$d.View.Requirement.AttemptCount}} / 3</td>
+          <th>需求 ID</th><td class="muted">{{$d.View.Requirement.ID}}</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>当前候选</h2>
+    {{if $d.View.CurrentCandidate}}
+      {{$c := $d.View.CurrentCandidate}}
+      <p><span class="tag current">当前版本 · 第 {{$c.AttemptNo}} 次生成</span>
+         <span class="tag">{{reviewLabel $c.ReviewStatus}}</span>
+         {{if $c.ReviewReason}}<span class="muted">原因：{{$c.ReviewReason}}</span>{{end}}</p>
+      <img class="candidate" src="{{$c.ImageURL}}" alt="当前候选图片">
+      {{if $d.CanReview}}
+      <form method="post" action="/requirements/{{$d.View.Requirement.ID}}/review">
+        <input type="hidden" name="candidate_id" value="{{$c.ID}}">
+        <label for="reason">复核意见（不通过必须填写原因）</label>
+        <input id="reason" type="text" name="reason" placeholder="例：主体与文案不符">
+        <input type="hidden" name="decision" value="approve">
+        <button type="submit" name="decision" value="approve">复核通过</button>
+        <button class="danger" type="submit" name="decision" value="reject">复核不通过</button>
+      </form>
+      {{end}}
+    {{else}}
+      <p class="muted">当前没有待复核的候选。</p>
+    {{end}}
+  </div>
+
+  <div class="card">
+    <h2>历史候选（只作历史，不能再审核或确认）</h2>
+    <table>
+      <thead><tr><th>版本</th><th>复核结论</th><th>原因</th><th>图片</th></tr></thead>
+      <tbody>
+      {{range $d.View.Candidates}}
+        {{if not .IsCurrent}}
+        <tr>
+          <td><span class="tag history">第 {{.AttemptNo}} 次（历史）</span></td>
+          <td>{{reviewLabel .ReviewStatus}}</td>
+          <td>{{.ReviewReason}}</td>
+          <td><img class="candidate" src="{{.ImageURL}}" alt="历史候选图片"></td>
+        </tr>
+        {{end}}
+      {{else}}
+        <tr><td colspan="4" class="muted">暂无历史候选。</td></tr>
+      {{end}}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>生成历史（每次生成保存当时的描述）</h2>
+    <table>
+      <thead><tr><th>序号</th><th>状态</th><th>供应商任务号</th><th>发起时的描述快照</th><th>结果</th><th>发起时间</th></tr></thead>
+      <tbody>
+      {{range $d.View.Tasks}}
+        <tr>
+          <td>第 {{.AttemptNo}} 次</td>
+          <td>{{taskLabel .Status}}</td>
+          <td class="muted">{{.SupplierTaskID}}</td>
+          <td>{{.DescriptionSnapshot}}</td>
+          <td>{{if .ImageURL}}<img class="candidate" src="{{.ImageURL}}" alt="生成结果">{{else}}{{.FailureReason}}{{end}}</td>
+          <td class="muted">{{.CreatedAt.Format "2006-01-02 15:04:05"}}</td>
+        </tr>
+      {{else}}
+        <tr><td colspan="6" class="muted">尚未发起过生成。</td></tr>
+      {{end}}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>可执行操作</h2>
+    <div class="row">
+      {{if $d.CanGenerate}}
+      <div>
+        <h2>发起生成</h2>
+        <form method="post" action="/requirements/{{$d.View.Requirement.ID}}/generations">
+          <label for="request_no">请求编号（幂等键，重复提交不会创建第二个任务）</label>
+          <input id="request_no" type="text" name="request_no" value="{{$d.NewRequestNo}}">
+          <button type="submit">发起生成</button>
+        </form>
+      </div>
+      {{end}}
+      {{if $d.CanEdit}}
+      <div>
+        <h2>修改描述</h2>
+        <form method="post" action="/requirements/{{$d.View.Requirement.ID}}/description">
+          <label for="description">新的图片描述</label>
+          <textarea id="description" name="description" required></textarea>
+          <button type="submit">保存描述</button>
+        </form>
+        <p class="muted">修改只影响下一次生成，历史描述快照不会被覆盖。</p>
+      </div>
+      {{end}}
+      {{if $d.CanAdopt}}
+      <div>
+        <h2>确认采用</h2>
+        <form method="post" action="/requirements/{{$d.View.Requirement.ID}}/adopt">
+          {{if $d.View.CurrentCandidate}}<input type="hidden" name="candidate_id" value="{{$d.View.CurrentCandidate.ID}}">{{end}}
+          <button type="submit">确认采用（交付完成）</button>
+        </form>
+      </div>
+      {{end}}
+      {{if $d.CanWithdraw}}
+      <div>
+        <h2>撤销需求</h2>
+        <form method="post" action="/requirements/{{$d.View.Requirement.ID}}/withdraw">
+          <button class="danger" type="submit">撤销需求</button>
+        </form>
+        <p class="muted">撤销后供应商可能仍在执行，迟到结果只保留审计，不会恢复需求或形成交付。</p>
+      </div>
+      {{end}}
+    </div>
+    {{if $d.CanAdopt}}
+    <div>
+      <h2>提出重做原因</h2>
+      <form method="post" action="/requirements/{{$d.View.Requirement.ID}}/rework">
+        <label for="rework_reason">重做原因</label>
+        <input id="rework_reason" type="text" name="reason" required placeholder="例：图片不符合文案">
+        <button class="secondary" type="submit">提出重做</button>
+      </form>
+    </div>
+    {{end}}
+    {{if $d.CanOperateNote}}
+    <div>
+      <h2>运营跟进意见</h2>
+      <form method="post" action="/requirements/{{$d.View.Requirement.ID}}/operator-note">
+        <label for="note">跟进意见</label>
+        <input id="note" type="text" name="note" required>
+        <button class="secondary" type="submit">记录意见</button>
+      </form>
+      <p class="muted">运营无权代替需求人确认采用。</p>
+    </div>
+    {{end}}
+  </div>
+
+  <div class="card">
+    <h2>审计时间线</h2>
+    <ul class="timeline">
+      {{range $d.View.Events}}
+      <li><span class="muted">{{.CreatedAt.Format "2006-01-02 15:04:05"}}</span>
+          <strong>{{eventLabel .Kind}}</strong> — {{.Detail}}</li>
+      {{else}}
+      <li class="muted">暂无记录。</li>
+      {{end}}
+    </ul>
+  </div>
+  {{end}}
+</main>
+</body>
+</html>{{end}}

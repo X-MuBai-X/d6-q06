@@ -1,0 +1,25 @@
+{{define "login.html"}}<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>{{.Title}}</title>
+{{template "styles" .}}
+</head>
+<body>
+<main>
+  <h1>营销素材 AI 生图工作台 · 登录</h1>
+  {{template "flash" .}}
+  <div class="card">
+    <form method="post" action="/login">
+      <label for="login">账号</label>
+      <input id="login" type="text" name="login" value="" required>
+      <label for="password">口令</label>
+      <input id="password" type="password" name="password" required>
+      <input type="hidden" name="next" value="{{with .Data}}{{.Next}}{{end}}">
+      <button type="submit">登录</button>
+    </form>
+    <p class="muted">预置账号：demand-a（需求人）、demand-b（需求人）、review-a（设计复核人）、ops-a（运营）。演示口令在《部署与使用说明》中以掩码展示。</p>
+  </div>
+</main>
+</body>
+</html>{{end}}
