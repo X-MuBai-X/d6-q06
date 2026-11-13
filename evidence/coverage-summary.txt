@@ -1,0 +1,23 @@
+题目 06 单元测试覆盖率门禁报告
+============================================================
+覆盖率剖面：C:\Users\26765\Documents\trae_projects\skills\2组\素材\d6\evidence\coverage.out
+统计口径：解析覆盖率剖面按语句数统计 covered/total（与 go tool cover 一致）
+排除项：无（自编的数据库访问与 HTTP 处理代码全部纳入统计）
+
+【各包覆盖率】
+  creative-studio/cmd/mockgen               80.79%  (122/151)
+  creative-studio/cmd/server                57.97%  (40/69)
+  creative-studio/internal/domain           89.71%  (61/68)
+  creative-studio/internal/httpapi          89.69%  (513/572)
+  creative-studio/internal/service          85.43%  (422/494)
+  creative-studio/internal/store            86.46%  (300/347)
+  creative-studio/internal/supplier         87.10%  (27/31)
+
+【整体覆盖率】 85.74%  (1485/1732)
+  核心包 creative-studio/internal/domain     89.71%
+  核心包 creative-studio/internal/store      86.46%
+  核心包 creative-studio/internal/service    85.43%
+  核心包 creative-studio/internal/httpapi    89.69%
+  核心包 creative-studio/internal/supplier   87.10%
+
+【结论】PASS（整体与各核心包均 ≥ 85.0%）

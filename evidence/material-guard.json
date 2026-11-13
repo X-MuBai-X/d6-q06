@@ -1,0 +1,102 @@
+{
+  "status": "PASS",
+  "db": "C:\\Users\\26765\\Documents\\trae_projects\\skills\\2组\\素材\\d6\\data\\run6.db",
+  "checks": [
+    {
+      "id": "G1",
+      "rule": "R1",
+      "name": "成功任务的描述快照非空",
+      "status": "PASS",
+      "evidence": "检查 4 条成功任务；异常记录：无"
+    },
+    {
+      "id": "G2",
+      "rule": "R2",
+      "name": "同一需求至多一个处理中任务且请求编号唯一",
+      "status": "PASS",
+      "evidence": "重复处理中：[]；重复请求编号：[]"
+    },
+    {
+      "id": "G3",
+      "rule": "R3",
+      "name": "生成次数不超过三次且失败类任务不产出候选",
+      "status": "PASS",
+      "evidence": "超限需求：[]；失败任务带候选：[]"
+    },
+    {
+      "id": "G4",
+      "rule": "R4/R7",
+      "name": "成功任务恰好一个候选且当前候选唯一（撤销需求的迟到结果除外）",
+      "status": "PASS",
+      "evidence": "多候选任务：[]；缺候选任务：[]；多当前候选需求：[]"
+    },
+    {
+      "id": "G5",
+      "rule": "R5",
+      "name": "已确认采用的需求必须有复核通过的当前候选",
+      "status": "PASS",
+      "evidence": "异常需求：[]"
+    },
+    {
+      "id": "G6",
+      "rule": "R6",
+      "name": "历史候选不再处于待复核状态",
+      "status": "PASS",
+      "evidence": "异常候选：[]"
+    },
+    {
+      "id": "G7",
+      "rule": "R7",
+      "name": "撤销的需求没有候选也没有采用记录",
+      "status": "PASS",
+      "evidence": "带候选的撤销需求：[]；撤销后仍被采用的：[]"
+    },
+    {
+      "id": "G8",
+      "rule": "R8",
+      "name": "需求与生成任务均有审计留痕",
+      "status": "PASS",
+      "evidence": "缺创建事件的需求：[]；缺事件的任务：[]"
+    },
+    {
+      "id": "S1",
+      "rule": "题面一致性",
+      "name": "最大生成次数为 3",
+      "status": "PASS",
+      "evidence": "internal/domain/rules.go MaxAttempts = 3"
+    },
+    {
+      "id": "S2",
+      "rule": "题面一致性",
+      "name": "生成超时上限为 60 秒",
+      "status": "PASS",
+      "evidence": "internal/domain/rules.go GenerationTimeout = 60 秒"
+    },
+    {
+      "id": "S3-CanStartGeneration",
+      "rule": "题面一致性",
+      "name": "CanStartGeneration 的允许状态集合符合题面",
+      "status": "PASS",
+      "evidence": "internal/domain/rules.go CanStartGeneration：缺少 无"
+    },
+    {
+      "id": "S3-CanReview",
+      "rule": "题面一致性",
+      "name": "CanReview 的允许状态集合符合题面",
+      "status": "PASS",
+      "evidence": "internal/domain/rules.go CanReview：缺少 无"
+    },
+    {
+      "id": "S3-CanAdopt",
+      "rule": "题面一致性",
+      "name": "CanAdopt 的允许状态集合符合题面",
+      "status": "PASS",
+      "evidence": "internal/domain/rules.go CanAdopt：缺少 无"
+    }
+  ],
+  "coverage": {
+    "status": "PASS",
+    "report": "题目 06 单元测试覆盖率门禁报告\n============================================================\n覆盖率剖面：C:\\Users\\26765\\Documents\\trae_projects\\skills\\2组\\素材\\d6\\evidence\\coverage.out\n统计口径：解析覆盖率剖面按语句数统计 covered/total（与 go tool cover 一致）\n排除项：无（自编的数据库访问与 HTTP 处理代码全部纳入统计）\n\n【各包覆盖率】\n  creative-studio/cmd/mockgen               80.79%  (122/151)\n  creative-studio/cmd/server                57.97%  (40/69)\n  creative-studio/internal/domain           89.71%  (61/68)\n  creative-studio/internal/httpapi          89.69%  (513/572)\n  creative-studio/internal/service          85.09%  (411/483)\n  creative-studio/internal/store            86.38%  (298/345)\n  creative-studio/internal/supplier         87.10%  (27/31)\n\n【整体覆盖率】 85.63%  (1472/1719)\n  核心包 creative-studio/internal/domain     89.71%\n  核心包 creative-studio/internal/store      86.38%\n  核心包 creative-studio/internal/service    85.09%\n  核心包 creative-studio/internal/httpapi    89.69%\n  核心包 creative-studio/internal/supplier   87.10%\n\n【结论】PASS（整体与各核心包均 ≥ 85.0%）\n"
+  },
+  "generated_at": "2026-11-13T14:03:14.437530+00:00"
+}

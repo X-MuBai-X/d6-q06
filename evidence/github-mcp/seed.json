@@ -1,0 +1,52 @@
+{
+  "seeded": true,
+  "reason": "",
+  "status": 201,
+  "response": {
+    "content": {
+      "name": ".seed-placeholder",
+      "path": ".seed-placeholder",
+      "sha": "48cdce85287243a96a9e7d47855104acbcb79837",
+      "size": 12,
+      "url": "https://api.github.com/repos/X-MuBai-X/d6-q06/contents/.seed-placeholder?ref=main",
+      "html_url": "https://github.com/X-MuBai-X/d6-q06/blob/main/.seed-placeholder",
+      "git_url": "https://api.github.com/repos/X-MuBai-X/d6-q06/git/blobs/48cdce85287243a96a9e7d47855104acbcb79837",
+      "download_url": "https://raw.githubusercontent.com/X-MuBai-X/d6-q06/main/.seed-placeholder?token=CUSCE4QVIX7ANE737ZSOIX3K64OSA",
+      "type": "file",
+      "_links": {
+        "self": "https://api.github.com/repos/X-MuBai-X/d6-q06/contents/.seed-placeholder?ref=main",
+        "git": "https://api.github.com/repos/X-MuBai-X/d6-q06/git/blobs/48cdce85287243a96a9e7d47855104acbcb79837",
+        "html": "https://github.com/X-MuBai-X/d6-q06/blob/main/.seed-placeholder"
+      }
+    },
+    "commit": {
+      "sha": "eea5c21c50327a5104e94f1a6fce82a28c4e26b1",
+      "node_id": "C_kwDOVtMeWtoAKGVlYTVjMjFjNTAzMjdhNTEwNGU5NGYxYTZmY2U4MmEyOGM0ZTI2YjE",
+      "url": "https://api.github.com/repos/X-MuBai-X/d6-q06/git/commits/eea5c21c50327a5104e94f1a6fce82a28c4e26b1",
+      "html_url": "https://github.com/X-MuBai-X/d6-q06/commit/eea5c21c50327a5104e94f1a6fce82a28c4e26b1",
+      "author": {
+        "name": "X-MuBai-X",
+        "email": "2676547390@qq.com",
+        "date": "2026-11-13T14:21:24Z"
+      },
+      "committer": {
+        "name": "X-MuBai-X",
+        "email": "2676547390@qq.com",
+        "date": "2026-11-13T14:21:24Z"
+      },
+      "tree": {
+        "sha": "635310668c0b73bde5d953da818c28abfc9eaf62",
+        "url": "https://api.github.com/repos/X-MuBai-X/d6-q06/git/trees/635310668c0b73bde5d953da818c28abfc9eaf62"
+      },
+      "message": "chore: 仓库占位提交（GitHub 对空仓库禁用 Git Data API 的绕行产物，非业务提交）",
+      "parents": [],
+      "verification": {
+        "verified": false,
+        "reason": "unsigned",
+        "signature": null,
+        "payload": null,
+        "verified_at": null
+      }
+    }
+  }
+}
