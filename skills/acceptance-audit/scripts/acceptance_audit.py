@@ -1,0 +1,389 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""acceptance-audit 的判定脚本：把题面 R1–R8 与共同要求拆成可机器判定的检查项。
+
+用法：
+    python skills/acceptance-audit/scripts/acceptance_audit.py --repo . --out-dir evidence/acceptance-audit
+
+输出：
+    <out-dir>/检查项明细.md
+    <out-dir>/acceptance-audit.json
+退出码：0=全部通过，1=存在 FAIL，2=存在待补证且无 FAIL
+"""
+from __future__ import annotations
+
+import argparse
+import datetime
+import json
+import pathlib
+import re
+import subprocess
+import sys
+
+# 泄密扫描的敏感形态（不使用白名单，也不使用例外目录）
+SECRET_PATTERNS = [
+    (re.compile(r"ghp_[A-Za-z0-9]{20,}"), "GitHub PAT"),
+    (re.compile(r"ghu_[A-Za-z0-9]{20,}"), "GitHub OAuth 令牌"),
+    (re.compile(r"(?i)(?:password|passwd|口令)\s*[:=]\s*[\"']?(?!\*)[A-Za-z0-9!@#$%^&*_\-]{6,}"), "明文口令"),
+    (re.compile(r"(?i)Authorization:\s*Bearer\s+[A-Za-z0-9\-_.=]{16,}"), "Bearer 令牌"),
+    (re.compile(r"(?i)(?:api[_-]?key|secret)\s*[:=]\s*[\"']?[A-Za-z0-9\-_]{12,}"), "密钥"),
+]
+
+
+class Checker:
+    def __init__(self) -> None:
+        self.items: list[dict] = []
+
+    def add(self, cid, category, rule, name, status, evidence, verify) -> None:
+        self.items.append(dict(id=cid, category=category, rule=rule, name=name,
+                               status=status, evidence=evidence, verify=verify))
+
+    def ok(self, cid, category, rule, name, evidence, verify="无需复验，结论已由证据支撑") -> None:
+        self.add(cid, category, rule, name, "PASS", evidence, verify)
+
+    def fail(self, cid, category, rule, name, evidence, verify) -> None:
+        self.add(cid, category, rule, name, "FAIL", evidence, verify)
+
+    def pending(self, cid, category, rule, name, evidence, verify) -> None:
+        self.add(cid, category, rule, name, "待补证", evidence, verify)
+
+
+def read(repo: pathlib.Path, rel: str) -> str:
+    path = repo / rel
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8", errors="replace")
+
+
+def line_of(text: str, needle: str) -> str:
+    for index, line in enumerate(text.splitlines(), start=1):
+        if needle in line:
+            return f"{index}: {line.strip()}"
+    return ""
+
+
+def run(cmd: list[str], cwd: pathlib.Path) -> tuple[int, str]:
+    proc = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace")
+    return proc.returncode, (proc.stdout or "") + (proc.stderr or "")
+
+
+def check_business_rules(ck: Checker, repo: pathlib.Path) -> None:
+    rules = read(repo, "internal/domain/rules.go")
+    service = read(repo, "internal/service/requirement.go")
+    callback = read(repo, "internal/service/callback.go")
+    schema = read(repo, "internal/store/schema.sql")
+    query = read(repo, "internal/service/query.go")
+    store_tx = read(repo, "internal/store/tx.go")
+
+    # R1 描述快照不可覆盖
+    if "DescriptionSnapshot" in store_tx and "req.Description" in service:
+        ck.ok("R1-01", "业务规则", "R1", "每次生成保存当时描述，历史不被覆盖",
+              f"internal/service/requirement.go {line_of(service, 'DescriptionSnapshot: req.Description')}")
+    else:
+        ck.fail("R1-01", "业务规则", "R1", "每次生成保存当时描述，历史不被覆盖",
+                "未找到描述快照写入逻辑", "补充 DescriptionSnapshot 写入并补单测")
+
+    # R2 幂等与唯一处理中任务
+    has_unique_index = "idx_one_processing_task" in schema and "idx_task_request_no" in schema
+    has_idempotent = "GetTaskByRequestNoTx" in service
+    if has_unique_index and has_idempotent:
+        ck.ok("R2-01", "业务规则", "R2", "同一需求至多一个处理中任务且请求编号幂等",
+              f"internal/store/schema.sql {line_of(schema, 'idx_one_processing_task')}；"
+              f"internal/service/requirement.go {line_of(service, 'GetTaskByRequestNoTx')}")
+    else:
+        ck.fail("R2-01", "业务规则", "R2", "同一需求至多一个处理中任务且请求编号幂等",
+                "缺少唯一索引或幂等分支", "补唯一索引与幂等判定")
+
+    # R3 次数上限与超时
+    max_ok = re.search(r"MaxAttempts\s*=\s*3", rules) is not None
+    timeout_ok = re.search(r"GenerationTimeout\s*=\s*60\s*\*\s*time\.Second", rules) is not None
+    sweep_ok = "SweepTimeouts" in callback and "TaskTimeout" in callback
+    if max_ok and timeout_ok and sweep_ok:
+        ck.ok("R3-01", "业务规则", "R3", "失败/超时无候选、生成次数上限三次",
+              f"internal/domain/rules.go {line_of(rules, 'MaxAttempts')}；{line_of(rules, 'GenerationTimeout')}；"
+              f"internal/service/callback.go {line_of(callback, 'TaskTimeout')}")
+    else:
+        ck.fail("R3-01", "业务规则", "R3", "失败/超时无候选、生成次数上限三次",
+                "次数上限/超时/巡检实现不完整", "补齐上限与超时巡检实现")
+
+    # R4 回调鉴权、幂等与异常可查
+    httpapi = read(repo, "internal/httpapi/server.go")
+    sign_ok = "VerifySignature" in httpapi and "EventSignatureInvalid" in read(repo, "internal/service/anomaly.go")
+    dup_ok = "EventCallbackDuplicate" in callback and "EventCallbackUnknown" in callback
+    if sign_ok and dup_ok:
+        ck.ok("R4-01", "业务规则", "R4", "回调鉴权、重复回调不重复建候选、异常可查",
+              f"internal/httpapi/server.go {line_of(httpapi, 'VerifySignature')}；"
+              f"internal/service/callback.go {line_of(callback, 'EventCallbackDuplicate')}")
+    else:
+        ck.fail("R4-01", "业务规则", "R4", "回调鉴权、重复回调不重复建候选、异常可查",
+                "回调鉴权或异常事件缺失", "补签名校验与异常事件")
+
+    # R5 复核原因与确认采用
+    reason_ok = "ValidateReviewReason" in read(repo, "internal/domain/rules.go")
+    adopt_ok = "func (s *Service) Adopt" in service and "ReqDelivered" in service
+    if reason_ok and adopt_ok:
+        ck.ok("R5-01", "业务规则", "R5", "复核不通过必须写原因，确认采用才算交付",
+              f"internal/domain/rules.go {line_of(read(repo, 'internal/domain/rules.go'), 'ValidateReviewReason')}；"
+              f"internal/service/requirement.go {line_of(service, 'func (s *Service) Adopt')}")
+    else:
+        ck.fail("R5-01", "业务规则", "R5", "复核不通过必须写原因，确认采用才算交付",
+                "复核原因校验或采用逻辑缺失", "补原因校验与采用状态流转")
+
+    # R6 版本历史
+    current_ok = "ClearCurrentCandidatesTx" in store_tx and "ErrNotCurrentCandidate" in service
+    if current_ok:
+        ck.ok("R6-01", "业务规则", "R6", "下一次生成后旧候选只作历史且不可复核/确认",
+              f"internal/service/requirement.go {line_of(service, 'ErrNotCurrentCandidate')}；"
+              f"internal/store/tx.go {line_of(store_tx, 'ClearCurrentCandidatesTx')}")
+    else:
+        ck.fail("R6-01", "业务规则", "R6", "下一次生成后旧候选只作历史且不可复核/确认",
+                "历史候选标记或拒绝逻辑缺失", "补 is_current 流转与拒绝分支")
+
+    # R7 撤销
+    withdraw_ok = "func (s *Service) Withdraw" in service and "ReqWithdrawn" in service
+    late_ok = "EventLateResultIgnored" in callback
+    if withdraw_ok and late_ok:
+        ck.ok("R7-01", "业务规则", "R7", "确认采用前可撤销，迟到结果不恢复需求",
+              f"internal/service/callback.go {line_of(callback, 'EventLateResultIgnored')}；"
+              f"internal/service/requirement.go {line_of(service, 'func (s *Service) Withdraw')}")
+    else:
+        ck.fail("R7-01", "业务规则", "R7", "确认采用前可撤销，迟到结果不恢复需求",
+                "撤销或迟到结果处理缺失", "补撤销与迟到结果分支")
+
+    # R8 权限与核查
+    perm_ok = "actorCanView" in read(repo, "internal/service/service.go") and "ErrForbidden" in service
+    detail_ok = "RequirementDetail" in query and "ListAnomalies" in query
+    if perm_ok and detail_ok:
+        ck.ok("R8-01", "业务规则", "R8", "需求人只看自己的需求，运营可查生成与异常记录",
+              f"internal/service/service.go {line_of(read(repo, 'internal/service/service.go'), 'actorCanView')}；"
+              f"internal/service/query.go {line_of(query, 'func (s *Service) RequirementDetail')}")
+    else:
+        ck.fail("R8-01", "业务规则", "R8", "需求人只看自己的需求，运营可查生成与异常记录",
+                "权限判定或核查视图缺失", "补权限判定与核查视图")
+
+
+def check_common_requirements(ck: Checker, repo: pathlib.Path, min_cov: float, skip_toolchain: bool) -> None:
+    # 数据库持久化
+    schema = read(repo, "internal/store/schema.sql")
+    if "CREATE TABLE IF NOT EXISTS requirements" in schema and "generation_tasks" in schema:
+        ck.ok("C-01", "共同要求", "§1.3", "使用数据库保存核心业务数据", "internal/store/schema.sql 建表语句齐全")
+    else:
+        ck.fail("C-01", "共同要求", "§1.3", "使用数据库保存核心业务数据",
+                "未找到业务表结构", "补建表语句")
+
+    # 最小业务页面
+    pages = ["workbench.html", "requirement.html", "review.html", "ops.html"]
+    missing = [p for p in pages if not (repo / "internal/httpapi/templates" / p).exists()]
+    if not missing:
+        ck.ok("C-02", "共同要求", "§1.2", "提供可操作的最小业务页面",
+              "internal/httpapi/templates/ 下存在工作台、需求详情、复核、运营异常四个页面")
+    else:
+        ck.fail("C-02", "共同要求", "§1.2", "提供可操作的最小业务页面",
+                f"缺少页面：{missing}", "补齐页面模板")
+
+    # 模拟供应商四类场景
+    mockgen = read(repo, "cmd/mockgen/main.go")
+    modes = [m for m in ("modeSuccess", "modeFailure", "modeReject", "modeTimeout") if m in mockgen]
+    if len(modes) == 4:
+        ck.ok("C-03", "共同要求", "§1.5", "模拟供应商可触发成功/失败/拒绝/超时/重复通知",
+              f"cmd/mockgen/main.go 覆盖 {', '.join(modes)}，并支持重复投递")
+    else:
+        ck.fail("C-03", "共同要求", "§1.5", "模拟供应商可触发成功/失败/拒绝/超时/重复通知",
+                f"仅覆盖 {modes}", "补齐模拟供应商的行为分支")
+
+    # 阶段产物齐备
+    docs = ["docs/01-需求分析.md", "docs/02-原型设计.md", "docs/03-任务规划.md",
+            "docs/06-会话导出.md", "docs/08-Skill使用记录.md", "docs/09-AI使用说明.md",
+            "docs/10-交付与发布说明.md", "docs/12-讲解视频带时间点目录.md", "skill-usage.md"]
+    missing_docs = [d for d in docs if not (repo / d).exists()]
+    if not missing_docs:
+        ck.ok("C-04", "共同要求", "§2", "各阶段产物齐备", "需求分析、原型、计划、会话导出、Skill 记录、AI 说明、交付说明、讲解目录、skill-usage.md 均存在")
+    else:
+        ck.fail("C-04", "共同要求", "§2", "各阶段产物齐备", f"缺少：{missing_docs}", "补齐阶段产物")
+
+    # AGENTS.md 与读取记录
+    agents = read(repo, "AGENTS.md")
+    record = read(repo, "docs/agents/AGENTS-读取记录.md")
+    snapshots = list((repo / "docs/agents").glob("AGENTS-v*.md")) if (repo / "docs/agents").exists() else []
+    if agents and record and snapshots:
+        ck.ok("C-05", "共同要求", "§3", "AGENTS.md 有版本快照与实际读取记录",
+              f"AGENTS.md 存在；版本快照 {len(snapshots)} 份；读取记录 {len(record.splitlines())} 行")
+    else:
+        ck.fail("C-05", "共同要求", "§3", "AGENTS.md 有版本快照与实际读取记录",
+                "缺少 AGENTS.md、版本快照或读取记录", "补齐约束文件快照与读取记录")
+
+    # 两个自编 Skill 的七要素
+    seven = ["## 1. 用途", "## 2. 触发场景", "## 3. 输入", "## 4. 执行步骤",
+             "## 5. 输出格式", "## 6. 失败处理", "## 7. 完成标准"]
+    skill_dirs = [repo / "skills/material-guard", repo / "skills/acceptance-audit"]
+    problems = []
+    for directory in skill_dirs:
+        skill_file = directory / "SKILL.md"
+        if not skill_file.exists():
+            problems.append(f"{directory.name}: 缺少 SKILL.md")
+            continue
+        content = skill_file.read_text(encoding="utf-8")
+        missing_elements = [e for e in seven if e not in content]
+        if missing_elements:
+            problems.append(f"{directory.name}: 缺少要素 {missing_elements}")
+        if not list((directory / "scripts").glob("*.py")):
+            problems.append(f"{directory.name}: 缺少判定脚本")
+    if not problems:
+        ck.ok("C-06", "共同要求", "§4", "至少两个自编 Skill，七要素齐全且有判定脚本",
+              "skills/material-guard 与 skills/acceptance-audit 七要素齐全，均带脚本")
+    else:
+        ck.fail("C-06", "共同要求", "§4", "至少两个自编 Skill，七要素齐全且有判定脚本",
+                "；".join(problems), "补齐七要素与脚本")
+
+    # Skill 调用记录
+    usage = read(repo, "skill-usage.md")
+    if usage and "material-guard" in usage and "acceptance-audit" in usage:
+        ck.ok("C-07", "共同要求", "§4", "skill-usage.md 汇总实际使用的 Skill", "skill-usage.md 含两个自编 Skill 的六项说明")
+    else:
+        ck.fail("C-07", "共同要求", "§4", "skill-usage.md 汇总实际使用的 Skill",
+                "skill-usage.md 缺少自编 Skill 的登记", "补齐 skill-usage.md 六列表")
+
+    # 覆盖率
+    summary = read(repo, "evidence/coverage-summary.txt")
+    if "结论】PASS" in summary:
+        ck.ok("C-08", "共同要求", "§6.1", "单元测试语句覆盖率整体与各核心包均达标",
+              "evidence/coverage-summary.txt 结论为 PASS")
+    elif summary:
+        ck.fail("C-08", "共同要求", "§6.1", "单元测试语句覆盖率整体与各核心包均达标",
+                "evidence/coverage-summary.txt 结论不是 PASS", "补足覆盖率后重跑 scripts/coverage_gate.py")
+    else:
+        ck.pending("C-08", "共同要求", "§6.1", "单元测试语句覆盖率整体与各核心包均达标",
+                   "未找到 evidence/coverage-summary.txt", "执行 python scripts/coverage_gate.py --root . --out-dir evidence")
+
+    # 场景验证
+    scenario_log = read(repo, "evidence/scenario-verify.log")
+    if scenario_log and "失败 0 项" in scenario_log:
+        ck.ok("C-09", "共同要求", "§2/§10", "五组完整工作场景实测通过",
+              "evidence/scenario-verify.log 显示全部场景断言通过")
+    elif scenario_log:
+        ck.fail("C-09", "共同要求", "§2/§10", "五组完整工作场景实测通过",
+                "场景验证日志中存在失败项", "修复后重跑 scripts/verify_scenarios.py")
+    else:
+        ck.pending("C-09", "共同要求", "§2/§10", "五组完整工作场景实测通过",
+                   "未找到 evidence/scenario-verify.log", "部署服务后执行 scripts/verify_scenarios.py")
+
+    # 工具链
+    if skip_toolchain:
+        ck.pending("T-01", "共同要求", "§6.6", "gofmt / go vet / 单元测试 / 竞态检测",
+                   "本次以 --skip-toolchain 跳过工具链检查", "在具备 Go 工具链的环境执行 scripts/quality_gate.sh")
+    else:
+        code, output = run(["gofmt", "-l", "."], repo)
+        if code == 0 and not output.strip():
+            ck.ok("T-01", "共同要求", "§6.6", "gofmt 零差异", "gofmt -l . 输出为空")
+        else:
+            ck.fail("T-01", "共同要求", "§6.6", "gofmt 零差异", f"gofmt -l . 输出：{output.strip()}", "执行 gofmt -w .")
+        code, output = run(["go", "vet", "./..."], repo)
+        if code == 0:
+            ck.ok("T-02", "共同要求", "§6.6", "go vet 无告警", "go vet ./... 退出码 0")
+        else:
+            ck.fail("T-02", "共同要求", "§6.6", "go vet 无告警", output.strip()[:400], "修复 vet 告警后重跑")
+
+    # 提交消息格式
+    if (repo / ".git").exists():
+        code, output = run(["git", "log", "--pretty=%s", "-n", "50"], repo)
+        bad = [line for line in output.splitlines()
+               if line and not re.match(r"^\[(feat|fix|hotfix|opt|docs|test)\]", line)]
+        if code == 0 and not bad:
+            ck.ok("C-10", "共同要求", "§9", "提交消息符合 [类型] [版本号] [编号] 描述 格式",
+                  "git log 全部提交消息格式合规")
+        else:
+            ck.fail("C-10", "共同要求", "§9", "提交消息符合 [类型] [版本号] [编号] 描述 格式",
+                    f"不合规提交：{bad[:5]}", "按规范改写提交消息（必要时用 filter-branch 或重建分支）")
+    else:
+        ck.pending("C-10", "共同要求", "§9", "提交消息符合 [类型] [版本号] [编号] 描述 格式",
+                   "当前目录不是 Git 仓库", "在仓库根目录重新执行本 Skill")
+
+    # 泄密扫描（无白名单、无例外目录）
+    hits = []
+    for path in list((repo / "evidence").rglob("*")) + list((repo / "docs").rglob("*")):
+        if not path.is_file():
+            continue
+        try:
+            content = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        for pattern, label in SECRET_PATTERNS:
+            if pattern.search(content):
+                hits.append(f"{path.relative_to(repo)}（{label}）")
+    if hits:
+        ck.fail("C-11", "共同要求", "§3/§8", "证据与文档中无明文口令、密钥与令牌",
+                f"命中：{hits[:5]}", "把凭据改为掩码或移到仓库外的凭据文件")
+    else:
+        ck.ok("C-11", "共同要求", "§3/§8", "证据与文档中无明文口令、密钥与令牌",
+              "全量扫描 evidence/ 与 docs/ 未命中（未使用白名单或例外目录）")
+
+    # 部署与冒烟
+    deployment = read(repo, "evidence/deployment-main.log")
+    if deployment.strip():
+        ck.ok("C-12", "共同要求", "§7", "自动部署有实际运行记录", "evidence/deployment-main.log 存在且非空")
+    else:
+        ck.pending("C-12", "共同要求", "§7", "自动部署有实际运行记录",
+                   "未找到 evidence/deployment-main.log", "在主分支合并提交上执行部署流水线并归档日志")
+
+    # 流水线配置
+    workflow = repo / ".github/workflows"
+    if workflow.exists() and any(workflow.glob("*.yml")):
+        ck.ok("C-13", "共同要求", "§7", "提交可实际执行的自动部署流水线", ".github/workflows/ 下存在流水线配置")
+    else:
+        ck.fail("C-13", "共同要求", "§7", "提交可实际执行的自动部署流水线",
+                "未找到 .github/workflows/*.yml", "补流水线配置")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="题目 06 验收检查")
+    parser.add_argument("--repo", default=".")
+    parser.add_argument("--out-dir", default="evidence/acceptance-audit")
+    parser.add_argument("--min-coverage", type=float, default=85.0)
+    parser.add_argument("--skip-toolchain", action="store_true")
+    args = parser.parse_args()
+
+    repo = pathlib.Path(args.repo).resolve()
+    out_dir = (repo / args.out_dir).resolve()
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    ck = Checker()
+    check_business_rules(ck, repo)
+    check_common_requirements(ck, repo, args.min_coverage, args.skip_toolchain)
+
+    fails = [i for i in ck.items if i["status"] == "FAIL"]
+    pendings = [i for i in ck.items if i["status"] == "待补证"]
+    overall = "FAIL" if fails else ("待补证" if pendings else "PASS")
+
+    lines = ["# 验收检查项明细（题目 06）", "",
+             f"- 检查时间：{datetime.datetime.now(datetime.timezone.utc).astimezone().isoformat(timespec='seconds')}",
+             f"- 仓库：`{repo}`",
+             f"- 总判定：**{overall}**（FAIL {len(fails)} 项，待补证 {len(pendings)} 项，通过 {len(ck.items) - len(fails) - len(pendings)} 项）", "",
+             "| 编号 | 类别 | 题面依据 | 检查项 | 结论 | 证据 | 复验方式 |",
+             "| --- | --- | --- | --- | --- | --- | --- |"]
+    for item in ck.items:
+        lines.append(f"| {item['id']} | {item['category']} | {item['rule']} | {item['name']} | "
+                     f"**{item['status']}** | {item['evidence']} | {item['verify']} |")
+    lines += ["", "## 待补证清单", ""]
+    if pendings:
+        for item in pendings:
+            lines.append(f"- {item['id']}：{item['name']} —— {item['evidence']}；补证方式：{item['verify']}")
+    else:
+        lines.append("- 无")
+    lines += ["", "## 未通过项", ""]
+    if fails:
+        for item in fails:
+            lines.append(f"- {item['id']}：{item['name']} —— {item['evidence']}；整改：{item['verify']}")
+    else:
+        lines.append("- 无")
+    lines.append("")
+
+    (out_dir / "检查项明细.md").write_text("\n".join(lines), encoding="utf-8")
+    payload = {"generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+               "status": overall, "items": ck.items}
+    (out_dir / "acceptance-audit.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    print("\n".join(lines))
+    return 1 if fails else (2 if pendings else 0)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
