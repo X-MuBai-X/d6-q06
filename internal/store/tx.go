@@ -72,6 +72,12 @@ func (s *Store) GetTaskByRequestNoTx(ctx context.Context, q Execer, requestNo st
 	return t, nil
 }
 
+// GetTaskByRequirementRequestNoTx 在事务上下文内按需求与请求编号组合读取。
+// 题面 R2：幂等键按需求隔离，跨需求复用同一请求编号不会被这里命中。
+func (s *Store) GetTaskByRequirementRequestNoTx(ctx context.Context, q Execer, requirementID, requestNo string) (*domain.GenerationTask, error) {
+	return s.getTaskByRequirementRequestNo(ctx, q, requirementID, requestNo)
+}
+
 // GetTaskBySupplierTaskIDTx 在事务上下文内按供应商任务号读取。
 func (s *Store) GetTaskBySupplierTaskIDTx(ctx context.Context, q Execer, supplierTaskID string) (*domain.GenerationTask, error) {
 	row := q.QueryRowContext(ctx, `SELECT id, requirement_id, request_no, attempt_no, description_snapshot, status,

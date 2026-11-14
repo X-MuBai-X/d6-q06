@@ -171,7 +171,8 @@ func (s *Service) HandleCallback(ctx context.Context, cb CallbackPayload) (*Call
 }
 
 // SweepTimeouts 把超过时限仍未收到有效终态的任务判定为超时（题面 R3）。
-// 返回被判定为超时的任务 ID 列表。超时不会自动重试，只把需求置为可再次发起的状态。
+// 返回被判定为超时的任务 ID 列表。超时不会自动重试，只把需求置为可再次发起的状态；
+// 已撤销（withdrawn）的需求只把任务记为超时并留审计，不得被恢复（题面 R7）。
 func (s *Service) SweepTimeouts(ctx context.Context) ([]string, error) {
 	now := s.now()
 	timeout := domain.EffectiveTimeout(s.cfg.ClockScale)
@@ -203,6 +204,16 @@ func (s *Service) SweepTimeouts(ctx context.Context) ([]string, error) {
 			req, err := s.store.GetRequirementTx(ctx, tx, current.RequirementID)
 			if err != nil {
 				return err
+			}
+			// 题面 R7：需求已撤销时，迟到的超时结果只保留审计，
+			// 绝不把已撤销的需求改回 failed／exhausted（撤销后不得恢复需求）。
+			if req.Status == domain.ReqWithdrawn {
+				msg := "需求已撤销，迟到的超时结果仅保留审计，未改写需求状态"
+				if err := s.store.InsertEventTx(ctx, tx, newEvent(nil, req.ID, current.ID, domain.EventLateResultIgnored, msg, now)); err != nil {
+					return err
+				}
+				ok = true
+				return nil
 			}
 			status := domain.NextStatusAfterAttemptFailure(current.AttemptNo)
 			if err := s.store.UpdateRequirementStatusTx(ctx, tx, req.ID, status, current.ID, "", req.AttemptCount, now); err != nil {

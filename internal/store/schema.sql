@@ -51,7 +51,11 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_one_processing_task
     ON generation_tasks(requirement_id) WHERE status = 'processing';
 
 -- 题面 R2：同请求编号重复发起不创建第二个供应商任务。
-CREATE UNIQUE INDEX IF NOT EXISTS idx_task_request_no ON generation_tasks(request_no);
+-- 幂等键的作用域是「同一需求」：请求编号在需求内唯一，跨需求复用由服务层明确拒绝（409）。
+-- DROP INDEX IF EXISTS 用于兼容既有库：旧库里的全局唯一索引被替换为下面的复合唯一索引。
+DROP INDEX IF EXISTS idx_task_request_no;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_task_requirement_request_no
+    ON generation_tasks(requirement_id, request_no);
 
 CREATE INDEX IF NOT EXISTS idx_tasks_requirement ON generation_tasks(requirement_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_supplier ON generation_tasks(supplier_task_id);

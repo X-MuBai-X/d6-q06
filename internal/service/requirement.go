@@ -97,14 +97,27 @@ func (s *Service) StartGeneration(ctx context.Context, actor *domain.User, requi
 		if !actorCanOperate(actor, req) {
 			return fmt.Errorf("%w: 只有需求人可以对自己的需求发起生成", domain.ErrForbidden)
 		}
-		// 幂等：同一请求编号命中已有任务时直接返回，不再创建供应商任务。
-		existing, err := s.store.GetTaskByRequestNoTx(ctx, tx, requestNo)
+		// 题面 R7 与 AGENTS §4 状态表：已撤销（以及已交付、次数用尽、待复核）的需求
+		// 一律不得发起生成，已撤销的需求不得被再次发起而复活为 generating。
+		// generating 状态放行到下面的「已有处理中任务」冲突判定，保持 R2 的既有口径。
+		if req.Status != domain.ReqGenerating && !domain.CanStartGeneration(req.Status) {
+			return fmt.Errorf("%w: 当前状态 %s 不允许发起生成", domain.ErrInvalidState, req.Status)
+		}
+		// 幂等：同一需求下同一请求编号命中已有任务时直接返回，不再创建供应商任务。
+		existing, err := s.store.GetTaskByRequirementRequestNoTx(ctx, tx, requirementID, requestNo)
 		if err == nil {
 			task = existing
 			created = false
 			return nil
 		}
 		if !errors.Is(err, domain.ErrNotFound) {
+			return err
+		}
+		// 题面 R2：幂等键按需求隔离。同一请求编号若已属于其它需求，必须明确拒绝，
+		// 不得返回别的需求的任务对象（更不得静默不执行却返回 202）。
+		if other, err := s.store.GetTaskByRequestNoTx(ctx, tx, requestNo); err == nil {
+			return fmt.Errorf("%w: 该请求编号已属于需求 %s，不能跨需求复用", domain.ErrConflict, other.RequirementID)
+		} else if !errors.Is(err, domain.ErrNotFound) {
 			return err
 		}
 		// 题面 R2：同一需求最多有一个处理中生成任务。

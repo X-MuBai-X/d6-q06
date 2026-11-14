@@ -160,6 +160,52 @@ func TestTaskUniqueness(t *testing.T) {
 	_ = bySupplier
 }
 
+// TestGetTaskByRequirementRequestNo 覆盖按需求+请求编号读取（幂等键按需求隔离）。
+func TestGetTaskByRequirementRequestNo(t *testing.T) {
+	st := newTestStore(t)
+	ctx := context.Background()
+	seedRequirement(t, st, "req-1")
+	seedRequirement(t, st, "req-2")
+	seedTask(t, st, "task-1", "req-1", "req-no-1", 1, domain.TaskProcessing)
+	seedTask(t, st, "task-2", "req-2", "req-no-1", 1, domain.TaskProcessing)
+
+	got, err := st.GetTaskByRequirementRequestNo(ctx, "req-1", "req-no-1")
+	if err != nil || got.ID != "task-1" {
+		t.Fatalf("按需求与请求编号读取失败: %+v（%v）", got, err)
+	}
+	// 需求不匹配时不得命中别的需求的任务
+	if _, err := st.GetTaskByRequirementRequestNo(ctx, "req-none", "req-no-1"); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("需求不匹配应返回 ErrNotFound，实际 %v", err)
+	}
+	if _, err := st.GetTaskByRequirementRequestNo(ctx, "req-1", "req-no-none"); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("请求编号不存在应返回 ErrNotFound，实际 %v", err)
+	}
+}
+
+// TestListRequirementsLimitAndAnomalyLimit 覆盖列表查询的数量上限分支。
+func TestListRequirementsLimitAndAnomalyLimit(t *testing.T) {
+	st := newTestStore(t)
+	ctx := context.Background()
+	seedRequirement(t, st, "req-1")
+	seedRequirement(t, st, "req-2")
+
+	items, err := st.ListRequirements(ctx, RequirementFilter{Limit: 1})
+	if err != nil || len(items) != 1 {
+		t.Fatalf("带上限的需求列表应返回 1 条，实际 %d（%v）", len(items), err)
+	}
+
+	kinds := []string{domain.EventLateResultIgnored, domain.EventGenerationTimeout}
+	if err := st.InsertEvent(ctx, &domain.Event{
+		RequirementID: "req-1", Kind: domain.EventLateResultIgnored, Detail: "迟到结果被忽略", CreatedAt: time.Now(),
+	}); err != nil {
+		t.Fatalf("写入审计事件失败: %v", err)
+	}
+	anomalies, err := st.ListAnomalyEvents(ctx, kinds, 5)
+	if err != nil || len(anomalies) != 1 {
+		t.Fatalf("异常列表应返回 1 条，实际 %d（%v）", len(anomalies), err)
+	}
+}
+
 func TestTaskQueriesAndUpdate(t *testing.T) {
 	st := newTestStore(t)
 	ctx := context.Background()

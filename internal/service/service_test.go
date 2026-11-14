@@ -111,7 +111,7 @@ func newTestEnv(t *testing.T, supplierMode string) *testEnv {
 
 func seedUser(t *testing.T, svc *Service, id, name string, role domain.Role) *domain.User {
 	t.Helper()
-	if err := svc.SeedUser(context.Background(), id, name, role, "Studio@2026"); err != nil {
+	if err := svc.SeedUser(context.Background(), id, name, role, testPassword); err != nil {
 		t.Fatalf("预置账号失败: %v", err)
 	}
 	user, err := svc.store.GetUser(context.Background(), id)
@@ -137,7 +137,7 @@ func TestLoginLogoutAndAuthenticate(t *testing.T) {
 	env := newTestEnv(t, "accept")
 	ctx := context.Background()
 
-	token, user, err := env.svc.Login(ctx, "demand-a", "Studio@2026")
+	token, user, err := env.svc.Login(ctx, "demand-a", testPassword)
 	if err != nil {
 		t.Fatalf("登录失败: %v", err)
 	}
@@ -147,7 +147,7 @@ func TestLoginLogoutAndAuthenticate(t *testing.T) {
 	if _, _, err := env.svc.Login(ctx, "demand-a", "wrong"); !errors.Is(err, domain.ErrUnauthorized) {
 		t.Fatalf("错误口令应返回 ErrUnauthorized，实际 %v", err)
 	}
-	if _, _, err := env.svc.Login(ctx, "nobody", "Studio@2026"); !errors.Is(err, domain.ErrUnauthorized) {
+	if _, _, err := env.svc.Login(ctx, "nobody", testPassword); !errors.Is(err, domain.ErrUnauthorized) {
 		t.Fatalf("未知账号应返回 ErrUnauthorized，实际 %v", err)
 	}
 	if _, _, err := env.svc.Login(ctx, "", ""); !errors.Is(err, domain.ErrInvalidInput) {

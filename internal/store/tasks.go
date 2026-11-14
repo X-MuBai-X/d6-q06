@@ -37,6 +37,12 @@ func (s *Store) GetTaskByRequestNo(ctx context.Context, requestNo string) (*doma
 		supplier_task_id, image_url, failure_reason, created_at, finished_at FROM generation_tasks WHERE request_no = ?`, requestNo)
 }
 
+// GetTaskByRequirementRequestNo 按需求与请求编号读取（幂等键按需求隔离）。
+// 题面 R2 的幂等作用域是「同一需求」：请求编号只在同一需求内唯一。
+func (s *Store) GetTaskByRequirementRequestNo(ctx context.Context, requirementID, requestNo string) (*domain.GenerationTask, error) {
+	return s.getTaskByRequirementRequestNo(ctx, s.db, requirementID, requestNo)
+}
+
 // GetTaskBySupplierTaskID 按供应商任务号读取（回调关联键）。
 func (s *Store) GetTaskBySupplierTaskID(ctx context.Context, supplierTaskID string) (*domain.GenerationTask, error) {
 	return s.getTask(ctx, s.db, `SELECT id, requirement_id, request_no, attempt_no, description_snapshot, status,
@@ -106,6 +112,21 @@ func (s *Store) UpdateTask(ctx context.Context, t *domain.GenerationTask) error 
 
 func (s *Store) getTask(ctx context.Context, q Execer, query, arg string) (*domain.GenerationTask, error) {
 	row := q.QueryRowContext(ctx, query, arg)
+	t, err := scanTask(row)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, domain.ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("读取生成任务失败: %w", err)
+	}
+	return t, nil
+}
+
+// getTaskByRequirementRequestNo 按需求与请求编号组合读取任务。
+func (s *Store) getTaskByRequirementRequestNo(ctx context.Context, q Execer, requirementID, requestNo string) (*domain.GenerationTask, error) {
+	row := q.QueryRowContext(ctx, `SELECT id, requirement_id, request_no, attempt_no, description_snapshot, status,
+		supplier_task_id, image_url, failure_reason, created_at, finished_at FROM generation_tasks
+		WHERE requirement_id = ? AND request_no = ?`, requirementID, requestNo)
 	t, err := scanTask(row)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, domain.ErrNotFound
