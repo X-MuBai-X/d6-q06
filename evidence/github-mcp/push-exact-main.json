@@ -1,0 +1,34 @@
+{
+  "owner": "X-MuBai-X",
+  "repo": "d6-q06",
+  "branch": "main",
+  "branch_tip_local": "bd4fc224726aa4b2da1bfc86e653b19d5862a5ef",
+  "transport": "GitHub REST API (git/blobs, git/trees, git/commits, git/refs)",
+  "reason": "本机 git push over HTTPS 被网络策略阻断（Recv failure: Connection was reset）",
+  "commits": [
+    {
+      "local_sha": "bd4fc224726aa4b2da1bfc86e653b19d5862a5ef",
+      "remote_sha": "2e79dd495a80386709e77933279f2665108c4c90",
+      "tree": "82d967a8ba062216d967e27c18d6f7a6d2c465d6",
+      "parents": [],
+      "message_first_line": "[docs] [v0.1.0] 初始化仓库说明与分支骨架"
+    }
+  ],
+  "mappings": [
+    {
+      "local_sha": "bd4fc224726aa4b2da1bfc86e653b19d5862a5ef",
+      "remote_sha": "2e79dd495a80386709e77933279f2665108c4c90",
+      "tree_local": "82d967a8ba062216d967e27c18d6f7a6d2c465d6",
+      "tree_remote": "82d967a8ba062216d967e27c18d6f7a6d2c465d6",
+      "tree_equal": true,
+      "message_first_line": "[docs] [v0.1.0] 初始化仓库说明与分支骨架",
+      "reason": "GitHub 提交时区规范化为 +0000，commit 对象字节与本地 +0800 偏移不同；tree SHA 一致"
+    }
+  ],
+  "blobs": 2,
+  "mismatches": [],
+  "ref_action": "updated(force)",
+  "ref": "refs/heads/main",
+  "ref_sha": "2e79dd495a80386709e77933279f2665108c4c90",
+  "ref_sha_local": "bd4fc224726aa4b2da1bfc86e653b19d5862a5ef"
+}

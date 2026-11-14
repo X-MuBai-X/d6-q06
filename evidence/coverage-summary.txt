@@ -1,0 +1,26 @@
+题目 06 单元测试覆盖率门禁报告
+============================================================
+覆盖率剖面：C:\Users\26765\Documents\trae_projects\skills\2组\素材\d6\evidence\coverage.out
+统计口径：逐包执行 go test -coverprofile 后按块去重汇总
+  · 语句口径：按剖面 numstmt 统计（题面要求的语句覆盖率）
+  · 块口径：已覆盖代码块 / 总代码块，跨平台一致，作为保守下界
+  · 两种口径同时达标才算通过（避免本机通过而 CI 失败）
+排除项：无（自编的数据库访问与 HTTP 处理代码全部纳入统计）
+
+【各包覆盖率】
+  creative-studio/cmd/mockgen              语句  80.65%  块  80.65%  (125/155 ; 50/62)
+  creative-studio/cmd/server               语句  56.34%  块  74.07%  (40/71 ; 20/27)
+  creative-studio/internal/domain          语句  89.71%  块  88.52%  (61/68 ; 54/61)
+  creative-studio/internal/httpapi         语句  98.98%  块  98.45%  (585/591 ; 254/258)
+  creative-studio/internal/service         语句  98.02%  块  97.25%  (496/506 ; 354/364)
+  creative-studio/internal/store           语句  99.72%  块  99.61%  (355/356 ; 255/256)
+  creative-studio/internal/supplier        语句  96.77%  块  95.45%  (30/31 ; 21/22)
+
+【整体覆盖率】 语句 95.16%  块 96.00%  (1692/1778 ; 1008/1050)
+  核心包 creative-studio/internal/domain    语句  89.71%  块  88.52%
+  核心包 creative-studio/internal/store     语句  99.72%  块  99.61%
+  核心包 creative-studio/internal/service   语句  98.02%  块  97.25%
+  核心包 creative-studio/internal/httpapi   语句  98.98%  块  98.45%
+  核心包 creative-studio/internal/supplier  语句  96.77%  块  95.45%
+
+【结论】PASS（整体与各核心包均 ≥ 85.0%）

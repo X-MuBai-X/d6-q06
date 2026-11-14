@@ -1,0 +1,55 @@
+{{define "styles"}}
+<style>
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background: #f3f4f6; color: #111827; }
+.nav { background: #111827; color: #f9fafb; padding: 12px 24px; display: flex; align-items: center; gap: 18px; }
+.nav a { color: #f9fafb; text-decoration: none; padding: 6px 10px; border-radius: 6px; }
+.nav a:hover { background: #374151; }
+.nav .who { margin-left: auto; font-size: 14px; }
+.nav form { display: inline; }
+main { max-width: 1080px; margin: 24px auto; padding: 0 20px 60px; }
+h1 { font-size: 22px; }
+h2 { font-size: 18px; margin-top: 28px; }
+.card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px; margin-bottom: 18px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { border-bottom: 1px solid #e5e7eb; padding: 8px 10px; text-align: left; vertical-align: top; }
+th { background: #f9fafb; }
+.flash { background: #ecfdf5; border: 1px solid #6ee7b7; color: #065f46; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; }
+.error { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; }
+label { display: block; font-size: 14px; margin: 10px 0 4px; }
+input[type=text], input[type=password], textarea { width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-family: inherit; }
+textarea { min-height: 80px; }
+button { margin-top: 12px; background: #2563eb; color: #fff; border: 0; border-radius: 6px; padding: 8px 16px; cursor: pointer; font-size: 14px; }
+button.secondary { background: #6b7280; }
+button.danger { background: #dc2626; }
+.row { display: flex; gap: 16px; flex-wrap: wrap; }
+.row > * { flex: 1 1 320px; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; background: #e5e7eb; color: #374151; }
+.tag.current { background: #dbeafe; color: #1d4ed8; }
+.tag.history { background: #f3f4f6; color: #6b7280; }
+img.candidate { max-width: 320px; border-radius: 8px; border: 1px solid #d1d5db; }
+.muted { color: #6b7280; font-size: 13px; }
+ul.timeline { list-style: none; padding-left: 0; }
+ul.timeline li { border-left: 2px solid #e5e7eb; padding: 4px 0 4px 12px; font-size: 14px; }
+</style>
+{{end}}
+
+{{define "nav"}}
+<nav class="nav">
+  <a href="/workbench">需求工作台</a>
+  <a href="/review">候选复核</a>
+  <a href="/ops">运营异常查询</a>
+  <span class="who">
+    {{if .User}}{{.User.Name}}（{{.User.Role}}）{{end}}
+    {{if .User}}
+    <form method="post" action="/logout"><button class="secondary" type="submit">退出登录</button></form>
+    {{end}}
+  </span>
+</nav>
+{{end}}
+
+{{define "flash"}}
+{{if .Flash}}<div class="flash">{{.Flash}}</div>{{end}}
+{{if .Error}}<div class="error">{{.Error}}</div>{{end}}
+{{end}}

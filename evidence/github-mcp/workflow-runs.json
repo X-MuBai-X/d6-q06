@@ -1,0 +1,62 @@
+{
+  "checks": [
+    {
+      "name": "deploy",
+      "status": "completed",
+      "conclusion": "failure",
+      "html_url": "https://github.com/X-MuBai-X/d6-q06/actions/runs/43539693413/job/132277788835",
+      "started_at": "2026-11-14T01:19:41Z",
+      "completed_at": "2026-11-14T01:22:59Z"
+    },
+    {
+      "name": "deploy",
+      "status": "completed",
+      "conclusion": "failure",
+      "html_url": "https://github.com/X-MuBai-X/d6-q06/actions/runs/43539687476/job/132277765529",
+      "started_at": "2026-11-14T01:19:37Z",
+      "completed_at": "2026-11-14T01:22:42Z"
+    },
+    {
+      "name": "quality-gate",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/X-MuBai-X/d6-q06/actions/runs/43539693413/job/132277089165",
+      "started_at": "2026-11-14T01:17:35Z",
+      "completed_at": "2026-11-14T01:19:39Z"
+    },
+    {
+      "name": "quality-gate",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/X-MuBai-X/d6-q06/actions/runs/43539687476/job/132277069082",
+      "started_at": "2026-11-14T01:17:32Z",
+      "completed_at": "2026-11-14T01:19:35Z"
+    }
+  ],
+  "runs": [
+    {
+      "id": 43539693413,
+      "name": "ci",
+      "status": "completed",
+      "conclusion": "failure",
+      "html_url": "https://github.com/X-MuBai-X/d6-q06/actions/runs/43539693413",
+      "head_sha": "d864dcac558d9b90b92a795040aadd663d146a5a",
+      "event": "pull_request",
+      "created_at": "2026-11-14T01:17:33Z",
+      "run_number": 5
+    },
+    {
+      "id": 43539687476,
+      "name": "ci",
+      "status": "completed",
+      "conclusion": "failure",
+      "html_url": "https://github.com/X-MuBai-X/d6-q06/actions/runs/43539687476",
+      "head_sha": "d864dcac558d9b90b92a795040aadd663d146a5a",
+      "event": "push",
+      "created_at": "2026-11-14T01:17:29Z",
+      "run_number": 4
+    }
+  ],
+  "check_runs_status": 200,
+  "workflow_runs_status": 200
+}

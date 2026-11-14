@@ -1,0 +1,85 @@
+{{define "ops.html"}}<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>{{.Title}}</title>
+{{template "styles" .}}
+</head>
+<body>
+{{template "nav" .}}
+<main>
+  <h1>运营异常查询</h1>
+  {{template "flash" .}}
+  {{with .Data}}{{$d := .}}
+  <div class="card">
+    <h2>需求状态分布</h2>
+    <table>
+      <thead><tr><th>状态</th><th>数量</th></tr></thead>
+      <tbody>
+      {{range $status, $count := $d.Overview.RequirementCounts}}
+        <tr><td>{{statusLabel $status}}</td><td>{{$count}}</td></tr>
+      {{end}}
+      </tbody>
+    </table>
+    <h2>生成任务状态分布</h2>
+    <table>
+      <thead><tr><th>状态</th><th>数量</th></tr></thead>
+      <tbody>
+      {{range $status, $count := $d.Overview.TaskCounts}}
+        <tr><td>{{taskLabel $status}}</td><td>{{$count}}</td></tr>
+      {{end}}
+      </tbody>
+    </table>
+    <p class="muted">异常事件总数：{{$d.Overview.AnomalyCount}}</p>
+  </div>
+
+  <div class="card">
+    <h2>异常记录</h2>
+    <table>
+      <thead><tr><th>时间</th><th>类型</th><th>需求</th><th>详情</th></tr></thead>
+      <tbody>
+      {{range $d.Anomaly}}
+        <tr>
+          <td class="muted">{{.CreatedAt.Format "2006-01-02 15:04:05"}}</td>
+          <td>{{eventLabel .Kind}}</td>
+          <td><a href="/requirements/{{.RequirementID}}">{{.RequirementID}}</a></td>
+          <td>{{.Detail}}</td>
+        </tr>
+      {{else}}
+        <tr><td colspan="4" class="muted">暂无异常记录。</td></tr>
+      {{end}}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>全部需求的生成与处置</h2>
+    <table>
+      <thead><tr><th>活动名称</th><th>状态</th><th>发起次数</th><th>当前候选</th><th>操作</th></tr></thead>
+      <tbody>
+      {{range $d.All}}
+        <tr>
+          <td>{{.ActivityName}}</td>
+          <td><span class="tag">{{statusLabel .Status}}</span></td>
+          <td>{{.AttemptCount}} / 3</td>
+          <td class="muted">{{.CurrentCandidate}}</td>
+          <td><a href="/requirements/{{.ID}}">查看详情</a></td>
+        </tr>
+      {{end}}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>最近事件</h2>
+    <ul class="timeline">
+      {{range $d.Overview.RecentEvents}}
+      <li><span class="muted">{{.CreatedAt.Format "2006-01-02 15:04:05"}}</span>
+          <strong>{{eventLabel .Kind}}</strong> — {{.Detail}}</li>
+      {{end}}
+    </ul>
+  </div>
+  {{end}}
+</main>
+</body>
+</html>{{end}}

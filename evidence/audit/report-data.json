@@ -1,0 +1,1039 @@
+{
+  "schema_version": "3.0",
+  "meta": {
+    "delivery_date": "2026-11-14",
+    "deployment": "scripts/deploy.sh 针对合并提交执行构建、健康检查与五组场景冒烟；上线地址为流水线运行器/本机进程内的验收环境，无公网常驻主机（见 limitations）",
+    "version_chain": "main 初始化 2e79dd4 ← dev/06 业务提交链（本地 709c220，远端同 tree） ← PR 合并提交",
+    "scope": "题目 06 营销素材 AI 生图、重做与确认交付的全部交付物、证据与流程",
+    "token_note": "统计范围：需求准备至最终交付的全部 AI 调用（含三个子 Agent 会话）；口径：会话归档中供应商 usage.totalTokens，按 (provider, request_id) 去重；合计 13375128 tokens，请求 92 条；阶段小计见 evidence/token-ledger.json 的 by_stage；基准：教师未发布同题同范围基准（profiles/06.json token_baselines 为空），故不做消耗比与额外浪费扣分计算，Token 项记未知，责任方 teacher"
+  },
+  "used_skill_ids": [
+    "AS-MG",
+    "AS-AA"
+  ],
+  "tables": {
+    "completion": [
+      {
+        "requirement_id": "06-A1-01",
+        "role_precondition": "需求人已登录；处于草稿态需求",
+        "operations": "① 新建需求并填写活动名称、用途、图片描述；② 确认后发起生成；③ 再次修改需求描述；④ 查询生成历史",
+        "expected": "每次生成保存当时描述，后续修改不覆盖历史",
+        "actual": "generation_tasks.description_snapshot 落库当时描述；修改需求描述后历史快照不变（单测 + 场景断言覆盖）",
+        "status": "pass",
+        "revision": "dev/06@2bc7d52",
+        "evidence": [
+          "E-SRC-01",
+          "E-TEST-01"
+        ]
+      },
+      {
+        "requirement_id": "06-A1-02",
+        "role_precondition": "需求人；同一需求已有或无处理中任务",
+        "operations": "① 同一 request_no 连续发起三次；② 已有处理中任务时再发起；③ 换一个需求复用同一 request_no",
+        "expected": "同需求至多一个处理中任务；同编号不重复创建供应商任务；跨需求复用被拒",
+        "actual": "前两项按预期；第三项在独立测试检出 D-04 后已修复合（409，需求归属校验）",
+        "status": "pass",
+        "revision": "dev/06@550685a",
+        "evidence": [
+          "E-SRC-01",
+          "E-SCHEMA-01",
+          "E-DEFIX-01"
+        ]
+      },
+      {
+        "requirement_id": "06-A1-03",
+        "role_precondition": "需求人；供应商可切换拒绝/失败/超时三种模式",
+        "operations": "① 供应商拒绝后发起；② 生成失败后发起；③ 供应商受理但不回调（超时）；④ 第三次失败后再次发起",
+        "expected": "三种失败均无候选交付；需求人可改描述重试；最多三次",
+        "actual": "四种路径均符合：候选数 0、失败原因可查、第四次发起返回 409（已达上限）",
+        "status": "pass",
+        "revision": "dev/06@2bc7d52",
+        "evidence": [
+          "E-SRC-01",
+          "E-SCN-01"
+        ]
+      },
+      {
+        "requirement_id": "06-A1-04",
+        "role_precondition": "供应商回调；可能签名错误、重复投递、关联不到任务",
+        "operations": "① 正常签名回调；② 错误签名回调；③ 同一回调重复投递；④ 回调关联不到已知任务；⑤ 任务已终结后再回调",
+        "expected": "验签通过才建候选；重复回调不重复建候选；异常可查；终态不被改写",
+        "actual": "五种路径均符合：候选唯一、signature_invalid / callback_duplicate / callback_unknown_task 可在运营页查到",
+        "status": "pass",
+        "revision": "dev/06@2bc7d52",
+        "evidence": [
+          "E-SRC-01",
+          "E-SCN-01",
+          "E-TEST-01"
+        ]
+      },
+      {
+        "requirement_id": "06-A1-05",
+        "role_precondition": "设计复核人与需求人；已有当前成功候选",
+        "operations": "① 复核人通过；② 复核人不通过并写原因；③ 需求人确认采用；④ 需求人不采用并写重做原因",
+        "expected": "未通过须写原因；复核通过后需求人可采用或重做；只有确认采用才算交付完成",
+        "actual": "四种分支均按状态机流转；delivered 只由 Adopt 产生",
+        "status": "pass",
+        "revision": "dev/06@2bc7d52",
+        "evidence": [
+          "E-SRC-01",
+          "E-SCN-01"
+        ]
+      },
+      {
+        "requirement_id": "06-A1-06",
+        "role_precondition": "需求人；已有历史候选",
+        "operations": "① 发起下一次生成；② 对历史候选发起复核；③ 对历史候选发起确认；④ 查看页面",
+        "expected": "旧候选只作历史不可复核/确认；页面区分当前候选与历史候选",
+        "actual": "历史候选复核/确认返回 409（ErrNotCurrentCandidate）；页面分栏展示",
+        "status": "pass",
+        "revision": "dev/06@2bc7d52",
+        "evidence": [
+          "E-SRC-01",
+          "E-SCN-01"
+        ]
+      },
+      {
+        "requirement_id": "06-A1-07",
+        "role_precondition": "需求人；需求处于生成中",
+        "operations": "① 生成中撤销；② 撤销后供应商迟到成功；③ 撤销后供应商迟到失败；④ 撤销后再次发起生成；⑤ 撤销后触发超时巡检",
+        "expected": "撤销后需求保持撤销；迟到结果只留审计；不得恢复需求；不得再发起生成",
+        "actual": "①②③符合；④⑤为独立测试检出的 D-01/D-02，修复后复测通过（409、需求保持 withdrawn）",
+        "status": "pass",
+        "revision": "dev/06@550685a",
+        "evidence": [
+          "E-TESTAGENT-01",
+          "E-DEFIX-01",
+          "E-TEST-01"
+        ]
+      },
+      {
+        "requirement_id": "06-A1-08",
+        "role_precondition": "三类角色：需求人、复核人、运营",
+        "operations": "① 需求人访问他人需求；② 复核人打开待复核队列；③ 运营查看生成与异常记录；④ 按需求查全过程",
+        "expected": "需求人只见自己的需求；复核人可审核待处理需求；运营可查生成与异常",
+        "actual": "越权访问返回 403；运营页可按需求查描述、供应商任务、结果、复核与处置",
+        "status": "pass",
+        "revision": "dev/06@2bc7d52",
+        "evidence": [
+          "E-SRC-01",
+          "E-SCN-01"
+        ]
+      },
+      {
+        "requirement_id": "06-A1-09",
+        "role_precondition": "需求人 → 设计复核人 → 运营",
+        "operations": "① 需求人建需求并发起生成；② 供应商回调成功；③ 复核人通过；④ 需求人确认采用；⑤ 运营查询完成记录",
+        "expected": "五步走通，需求状态为 delivered 并留完整事件链",
+        "actual": "场景脚本 S1 逐条断言通过",
+        "status": "pass",
+        "revision": "dev/06@2bc7d52",
+        "evidence": [
+          "E-SCN-01"
+        ]
+      },
+      {
+        "requirement_id": "06-A1-10",
+        "role_precondition": "需求人；已有成功候选",
+        "operations": "① 复核人退回并写原因；② 或需求人不采用并写重做原因；③ 修改描述再生成；④ 确认新候选；⑤ 查看旧候选",
+        "expected": "新版本确认即交付；旧版本不可误交付",
+        "actual": "场景脚本 S2 覆盖两条重做路径，全部通过",
+        "status": "pass",
+        "revision": "dev/06@2bc7d52",
+        "evidence": [
+          "E-SCN-01"
+        ]
+      },
+      {
+        "requirement_id": "06-A1-11",
+        "role_precondition": "需求人；供应商可切换失败模式",
+        "operations": "① 拒绝；② 失败；③ 超时；④ 需求人重试",
+        "expected": "均无候选；重试后可继续；历史原因可追溯",
+        "actual": "场景脚本 S3 覆盖三种失败与重试，全部通过",
+        "status": "pass",
+        "revision": "dev/06@2bc7d52",
+        "evidence": [
+          "E-SCN-01"
+        ]
+      },
+      {
+        "requirement_id": "06-A1-12",
+        "role_precondition": "需求人；生成中",
+        "operations": "① 生成中撤销；② 供应商迟到成功；③ 运营查询处理原因",
+        "expected": "需求保持撤销；迟到结果不形成候选；运营可查原因",
+        "actual": "场景脚本 S4 通过；另修复独立测试检出的巡检复活缺陷",
+        "status": "pass",
+        "revision": "dev/06@550685a",
+        "evidence": [
+          "E-SCN-01",
+          "E-DEFIX-01"
+        ]
+      },
+      {
+        "requirement_id": "06-A1-13",
+        "role_precondition": "需求人、复核人、运营并发操作",
+        "operations": "① 同编号重复发起；② 旧回调晚到；③ 重复复核；④ 访问他人需求；⑤ 第三次后再重做",
+        "expected": "每种情况都有明确结果（同一任务 / 只留审计 / 409 / 403 / 409）",
+        "actual": "场景脚本 S5 覆盖五种情况全部通过；跨需求串号缺陷已修复复测",
+        "status": "pass",
+        "revision": "dev/06@550685a",
+        "evidence": [
+          "E-SCN-01",
+          "E-DEFIX-01"
+        ]
+      }
+    ],
+    "code_runtime": [
+      {
+        "metric": "format_vet",
+        "status": "pass",
+        "command": "gofmt -l . && go vet ./...",
+        "expected": "gofmt 无差异、vet 无告警",
+        "actual": "gofmt -l . 输出为空；go vet ./... 退出码 0",
+        "exit_code": "0",
+        "environment": "go1.27.1 windows/amd64",
+        "revision": "dev/06@2bc7d52",
+        "evidence": [
+          "E-TEST-01"
+        ]
+      },
+      {
+        "metric": "build",
+        "status": "pass",
+        "command": "go build ./... && go build -o bin/server ./cmd/server && go build -o bin/mockgen ./cmd/mockgen",
+        "expected": "全部构建成功",
+        "actual": "构建成功并产出可执行文件",
+        "exit_code": "0",
+        "environment": "go1.27.1 windows/amd64",
+        "revision": "dev/06@2bc7d52",
+        "evidence": [
+          "E-TEST-01"
+        ]
+      },
+      {
+        "metric": "startup",
+        "status": "pass",
+        "command": "启动 bin/mockgen.exe 与 bin/server.exe 并请求 /healthz",
+        "expected": "两个进程起来且健康检查 200",
+        "actual": "healthz 返回 {\"ok\":true,...}",
+        "exit_code": "0",
+        "environment": "go1.27.1 windows/amd64",
+        "revision": "dev/06@2bc7d52",
+        "evidence": [
+          "E-SCN-01"
+        ]
+      },
+      {
+        "metric": "health",
+        "status": "pass",
+        "command": "curl http://127.0.0.1:8080/healthz",
+        "expected": "返回 ok",
+        "actual": "返回 ok",
+        "exit_code": "0",
+        "environment": "go1.27.1 windows/amd64",
+        "revision": "dev/06@2bc7d52",
+        "evidence": [
+          "E-SCN-01"
+        ]
+      },
+      {
+        "metric": "normal_business",
+        "status": "pass",
+        "command": "python scripts/verify_scenarios.py --base http://127.0.0.1:8080 --mock http://127.0.0.1:8090",
+        "expected": "S1 正常交付链路通过",
+        "actual": "S1 相关断言全部 [PASS]",
+        "exit_code": "0",
+        "environment": "go1.27.1 windows/amd64",
+        "revision": "dev/06@2bc7d52",
+        "evidence": [
+          "E-SCN-01"
+        ]
+      },
+      {
+        "metric": "abnormal_business",
+        "status": "pass",
+        "command": "同上（S2/S3/S4/S5）",
+        "expected": "重做、失败、撤销、并发与权限分支通过",
+        "actual": "S2–S5 相关断言全部 [PASS]，含 403/409 负向断言",
+        "exit_code": "0",
+        "environment": "go1.27.1 windows/amd64",
+        "revision": "dev/06@2bc7d52",
+        "evidence": [
+          "E-SCN-01"
+        ]
+      },
+      {
+        "metric": "persistence_restart",
+        "status": "pass",
+        "command": "重启 server 进程后按需求查询",
+        "expected": "需求、任务、候选、事件仍可查询且数量一致",
+        "actual": "独立测试重启后四项计数完全一致",
+        "exit_code": "0",
+        "environment": "go1.27.1 windows/amd64",
+        "revision": "dev/06@2bc7d52",
+        "evidence": [
+          "E-TESTAGENT-01"
+        ]
+      },
+      {
+        "metric": "deployed_smoke",
+        "status": "pass",
+        "command": "./scripts/deploy.sh <合并提交 SHA> 后执行场景冒烟",
+        "expected": "部署后健康检查与五组场景冒烟通过",
+        "actual": "见 evidence/deployment-main.log",
+        "exit_code": "0",
+        "environment": "go1.27.1 windows/amd64 + Git Bash",
+        "revision": "main@合并提交",
+        "evidence": [
+          "E-DEPLOY-01"
+        ]
+      }
+    ],
+    "workflow": [
+      {
+        "stage": "requirements",
+        "predecessors": [],
+        "time": "2026-11-13T21:38",
+        "snapshot": "docs/_question-06.md、docs/_common-requirements.md、docs/01-需求分析.md",
+        "handoff": "规则编号表 R1–R8、场景编号表 S1–S5、假设清单 A1–A7",
+        "status": "pass",
+        "gate": "题面解析自检通过",
+        "evidence": [
+          "E-REQ-01"
+        ]
+      },
+      {
+        "stage": "prototype",
+        "predecessors": [
+          "requirements"
+        ],
+        "time": "2026-11-13T21:40",
+        "snapshot": "docs/02-原型设计.md + internal/httpapi/templates/",
+        "handoff": "页面状态说明与同源约定",
+        "status": "pass",
+        "gate": "覆盖角色/结果/失败状态",
+        "evidence": [
+          "E-PRO-01"
+        ]
+      },
+      {
+        "stage": "planning",
+        "predecessors": [
+          "prototype"
+        ],
+        "time": "2026-11-13T21:42",
+        "snapshot": "docs/03-任务规划.md",
+        "handoff": "任务↔需求映射、依赖与完成条件",
+        "status": "pass",
+        "gate": "先于开发落盘",
+        "evidence": [
+          "E-PLAN-01"
+        ]
+      },
+      {
+        "stage": "development",
+        "predecessors": [
+          "planning"
+        ],
+        "time": "2026-11-13T21:45",
+        "snapshot": "AGENTS.md v1.0 + skills/ + internal/ + cmd/ + scripts/ + .github/workflows/ci.yml",
+        "handoff": "业务闭环实现、两个自编 Skill、流水线与部署脚本",
+        "status": "pass",
+        "gate": "AGENTS 与 Skill 早于首行业务代码",
+        "evidence": [
+          "E-SRC-01",
+          "E-AGENT-01",
+          "E-PIPE-01"
+        ]
+      },
+      {
+        "stage": "testing",
+        "predecessors": [
+          "development"
+        ],
+        "time": "2026-11-13T22:20",
+        "snapshot": "evidence/independent-test-report.md + evidence/go-test-output.txt",
+        "handoff": "9 条缺陷清单与复现输出、覆盖率与场景日志",
+        "status": "pass",
+        "gate": "独立上下文复测，不采信自述",
+        "evidence": [
+          "E-TESTAGENT-01",
+          "E-TEST-01"
+        ]
+      },
+      {
+        "stage": "acceptance",
+        "predecessors": [
+          "testing"
+        ],
+        "time": "2026-11-14T08:30",
+        "snapshot": "evidence/defect-fix-round1*.md + evidence/independent-acceptance-report.md",
+        "handoff": "缺陷修复闭环、回归证据、独立验收结论",
+        "status": "pass",
+        "gate": "缺陷修复后重跑受影响检查",
+        "evidence": [
+          "E-DEFIX-01",
+          "E-ACCEPTAGENT-01"
+        ]
+      },
+      {
+        "stage": "deployment",
+        "predecessors": [
+          "acceptance"
+        ],
+        "time": "2026-11-14T08:40",
+        "snapshot": "evidence/github-mcp/ + evidence/deployment-main.log",
+        "handoff": "PR、状态检查、合并提交、部署与冒烟日志",
+        "status": "pass",
+        "gate": "合并提交通过门禁后才允许部署",
+        "evidence": [
+          "E-GIT-04",
+          "E-DEPLOY-01"
+        ]
+      }
+    ],
+    "prompts": [
+      {
+        "id": "P-01",
+        "requirement_ids": [
+          "06-A1-14",
+          "06-A1-15",
+          "06-A1-16"
+        ],
+        "task": "解析题面并产出需求分析、原型与任务计划",
+        "predecessors": [],
+        "time": "2026-11-13T21:34",
+        "prompt_location": "会话首条用户消息",
+        "context": "题面 06 全文与共同要求 §1–§10、yaoqiu 工具包、审计技能输入契约",
+        "ai_action": "读取题面原文与工具包模板，抽取角色、起点、规则、异常与假设，编号 R1–R8、S1–S5、A1–A7",
+        "tool_result": "docs/01、docs/02、docs/03 已落盘，五方对照表完成",
+        "student_judgment": "逐条核对规则编号与题面一致，确认无增删业务规则后才进入开发",
+        "revision": "v0.1.0",
+        "verification": "docs/01 §4 规则表与 S1–S5 场景表",
+        "status": "pass",
+        "gap": "无缺口：规则编号与题面逐条对齐，题面未明确项已全部进入假设清单 A1–A7 待确认。",
+        "correct_approach": "以题面为准，未明确项进入假设清单而非当作既定需求",
+        "evidence": [
+          "E-REQ-01",
+          "E-PRO-01",
+          "E-PLAN-01"
+        ]
+      },
+      {
+        "id": "P-02",
+        "requirement_ids": [
+          "06-A1-01",
+          "06-A1-03",
+          "06-A1-05",
+          "06-A1-06"
+        ],
+        "task": "实现需求、生成、回调、复核、采用、撤销的业务闭环",
+        "predecessors": [
+          "P-01"
+        ],
+        "time": "2026-11-13T21:45",
+        "prompt_location": "会话事件清单 21:45 条",
+        "context": "AGENTS.md v1.0 约束、schema 设计、R1–R8 规则",
+        "ai_action": "按 domain/store/service/supplier/httpapi 分层实现，写入描述快照、is_current、事务与签名校验",
+        "tool_result": "首轮实现完成，go build 与 go vet 通过",
+        "student_judgment": "人工复核状态机与题面状态迁移一致后提交",
+        "revision": "v0.1.0",
+        "verification": "internal/service/requirement.go、callback.go 与单测",
+        "status": "pass",
+        "gap": "首版实现未含幂等归属校验与撤销状态闸门，由独立测试 P-04 检出后于 P-05 补齐。",
+        "correct_approach": "业务规则以题面为准，假设写入清单",
+        "evidence": [
+          "E-SRC-01",
+          "E-TEST-01"
+        ]
+      },
+      {
+        "id": "P-03",
+        "requirement_ids": [
+          "06-A1-09",
+          "06-A1-10",
+          "06-A1-11",
+          "06-A1-12",
+          "06-A1-13"
+        ],
+        "task": "编写并运行五组工作场景脚本",
+        "predecessors": [
+          "P-02"
+        ],
+        "time": "2026-11-13T21:52",
+        "prompt_location": "会话事件清单 21:52 条",
+        "context": "题面「必须演示」的五组场景与判定口径",
+        "ai_action": "编写 scripts/verify_scenarios.py，逐条断言正常、重做、失败、撤销、并发与权限",
+        "tool_result": "首轮因遗留进程与污染库出现假失败，清理后 36 项全部通过",
+        "student_judgment": "人工确认为环境污染而非业务缺陷，并改用全新库复跑",
+        "revision": "v0.1.0",
+        "verification": "evidence/scenario-verify.log",
+        "status": "pass",
+        "gap": "首轮场景运行受遗留进程与污染库影响，需先做环境归因再判业务缺陷；归因说明已留档。",
+        "correct_approach": "先确认被测进程与数据库归属，再判定失败真伪",
+        "evidence": [
+          "E-SCN-01"
+        ]
+      },
+      {
+        "id": "P-04",
+        "requirement_ids": [
+          "06-A1-07",
+          "06-A1-08"
+        ],
+        "task": "独立测试 Agent 全量复测并出具缺陷报告",
+        "predecessors": [
+          "P-03"
+        ],
+        "time": "2026-11-13T22:20",
+        "prompt_location": "独立测试子会话",
+        "context": "题面快照与当前代码，明确禁止采信开发会话结论",
+        "ai_action": "独立复跑场景、构造探针脚本、逐条核对 R1–R8 与五组场景",
+        "tool_result": "产出 9 条缺陷（含 2 条严重）与复现输出，结论为 FAIL",
+        "student_judgment": "接受该结论，逐条登记缺陷并进入修复轮次",
+        "revision": "v0.1.0",
+        "verification": "evidence/independent-test-report.md",
+        "status": "pass",
+        "gap": "独立测试未覆盖竞态检测（本机无 C 编译器），该范围改由 CI 的 go test -race 步骤补证。",
+        "correct_approach": "独立测试不采信自述，缺陷须有复现步骤",
+        "evidence": [
+          "E-TESTAGENT-01"
+        ]
+      },
+      {
+        "id": "P-05",
+        "requirement_ids": [
+          "06-A1-02",
+          "06-A1-07",
+          "06-A1-13"
+        ],
+        "task": "修复撤销复活、巡检复活与幂等串号",
+        "predecessors": [
+          "P-04"
+        ],
+        "time": "2026-11-14T00:00",
+        "prompt_location": "会话事件清单 00:00 条",
+        "context": "独立测试报告 D-01/D-02/D-04 的根因定位",
+        "ai_action": "在服务层补状态闸门与归属校验、巡检跳过已撤销需求、幂等作用域收敛到 (requirement_id, request_no)",
+        "tool_result": "新增回归用例；仓库副本回退验证「修复前失败、修复后通过」",
+        "student_judgment": "人工核对改动未放宽任何既有校验，且未删除测试",
+        "revision": "v0.1.0",
+        "verification": "evidence/defect-fix-round1.md、internal/service/regression_test.go",
+        "status": "pass",
+        "gap": "回归验证以功能级断言为主，未对状态机做穷举或属性测试（见 ISS-07）。",
+        "correct_approach": "先判定责任方，再决定修业务还是修判据",
+        "evidence": [
+          "E-DEFIX-01",
+          "E-TEST-01"
+        ]
+      },
+      {
+        "id": "P-06",
+        "requirement_ids": [
+          "06-A1-04",
+          "06-A1-13"
+        ],
+        "task": "修复撤销接口连接重置与场景脚本默认时钟不通过",
+        "predecessors": [
+          "P-04"
+        ],
+        "time": "2026-11-14T00:10",
+        "prompt_location": "会话事件清单 00:10 条",
+        "context": "独立测试报告 D-03/D-05/D-08 的统计证据",
+        "ai_action": "写接口统一读干请求体并加兜底中间件；场景脚本等待窗口按题面 60 秒口径放宽；mockgen 测试改动态端口",
+        "tool_result": "带体撤销 40 次全部稳定返回；默认时钟下场景脚本 36/36",
+        "student_judgment": "人工确认未删减断言、未 skip 测试",
+        "revision": "v0.1.0",
+        "verification": "evidence/defect-fix-round1-tools.md",
+        "status": "pass",
+        "gap": "等待窗口按题面 60 秒口径调整为 60+15 秒，属时限参数调整而非断言删减；未做长时间压力测试。",
+        "correct_approach": "修法不得以放宽断言换取通过",
+        "evidence": [
+          "E-DEFIX-01",
+          "E-SCN-01"
+        ]
+      },
+      {
+        "id": "P-07",
+        "requirement_ids": [
+          "06-A2-05",
+          "06-A3-02",
+          "06-A3-03"
+        ],
+        "task": "统一覆盖率口径并暴露跨平台统计差异",
+        "predecessors": [
+          "P-06"
+        ],
+        "time": "2026-11-14T08:20",
+        "prompt_location": "CI 运行 43535651446 日志",
+        "context": "CI 上 internal/httpapi 语句覆盖率 84.26% 低于阈值，而本机为 89.51%",
+        "ai_action": "下载 CI 归档剖面逐块比对，定位为 Go 工具链 numstmt 统计口径差异；门禁脚本改为逐包取剖面并同时输出块口径",
+        "tool_result": "两平台的已覆盖块集合完全一致（httpapi 221/258）",
+        "student_judgment": "人工采纳更严格口径，补测到两套口径均达标",
+        "revision": "v0.1.0",
+        "verification": "evidence/ci-coverage-linux.out、evidence/coverage-summary.txt",
+        "status": "pass",
+        "gap": "口径差异根因为 Go 工具链版本不同（CI 1.27.4 / 本机 1.27.1），未回到统一工具链版本做对照实验。",
+        "correct_approach": "唯一口径必须跨平台可比，不能本机通过而 CI 失败",
+        "evidence": [
+          "E-COV-01",
+          "E-PIPE-02"
+        ]
+      },
+      {
+        "id": "P-08",
+        "requirement_ids": [
+          "06-A1-14"
+        ],
+        "task": "独立验收 Agent 依据原题逐项验收",
+        "predecessors": [
+          "P-07"
+        ],
+        "time": "2026-11-14T08:30",
+        "prompt_location": "独立验收子会话",
+        "context": "题面原文与共同要求、六维度清单、禁止采信开发会话结论",
+        "ai_action": "独立复跑 R1–R8 与五组场景、复测三条严重缺陷、构造泄露验证扫描有效性",
+        "tool_result": "结论「有条件通过」：0 严重、0 中等、6 条低级项，并给出未覆盖范围",
+        "student_judgment": "接受低级项并逐条整改（扫描形态补齐、R2 判据增强、C-08/C-09 改为复算、文档回填）",
+        "revision": "v0.1.0",
+        "verification": "evidence/independent-acceptance-report.md",
+        "status": "pass",
+        "gap": "验收未覆盖竞态检测与常驻环境部署，相关项按 unknown/待补证登记（见 ISS-03、ISS-04）。",
+        "correct_approach": "验收结论必须带证据位置，未覆盖不写成通过",
+        "evidence": [
+          "E-ACCEPTAGENT-01"
+        ]
+      }
+    ],
+    "agents_skills": [
+      {
+        "id": "AS-AGENTS",
+        "kind": "agent_rules",
+        "name": "项目级 Agent 约束（AGENTS.md v1.0）",
+        "source_version": "v1.0",
+        "location": "AGENTS.md、docs/agents/AGENTS-v1.0.md、docs/agents/AGENTS-读取记录.md",
+        "scenario": "开发前约束编写、缺陷修复与交付自检全过程",
+        "loaded_at": "2026-11-13T21:40",
+        "usage_location": "开发阶段与每轮修复前读取",
+        "reason": "把「阶段顺序、角色边界、提交格式、覆盖率口径、禁止编造」固化为可执行门禁",
+        "input_output": "输入：题目与共同要求；输出：三阶段门禁与自检清单",
+        "help": "实际帮助：修复轮次全部按「先判定责任方再动手」执行，避免了把判据缺陷当业务缺陷去改代码",
+        "limitations": "局限：工作项编号核验依赖外部 meegle CLI，本机缺失，只能登记待补证",
+        "status": "pass",
+        "evidence": [
+          "E-AGENT-01"
+        ]
+      },
+      {
+        "id": "AS-MG",
+        "kind": "business_skill",
+        "name": "material-guard（营销素材业务不变量守卫）",
+        "source_version": "v0.2.0",
+        "location": "skills/material-guard/SKILL.md、skills/material-guard/scripts/material_guard.py",
+        "scenario": "开发自检与每轮缺陷修复后对数据库不变量做机器判定",
+        "loaded_at": "2026-11-13T22:05",
+        "usage_location": "开发阶段、缺陷修复后",
+        "reason": "把 R1–R8 转成 G1–G9 数据库不变量与源码一致性检查，判定逻辑在脚本里",
+        "input_output": "输入：仓库路径与 SQLite 库；输出：逐项 PASS/FAIL 与 JSON 结果",
+        "help": "实际帮助：第 1 轮发现 G4 判据把「撤销需求的迟到成功」误判为违规，据此修正判据而非放宽阈值；独立测试后又据此新增 G9「撤销不得复活」不变量",
+        "limitations": "局限：只能检查脚本已建模的不变量；未建模的业务语义仍需人工与场景脚本覆盖",
+        "status": "pass",
+        "evidence": [
+          "E-SKILL-B-01",
+          "E-SKILL-B-02"
+        ]
+      },
+      {
+        "id": "AS-AA",
+        "kind": "acceptance_skill",
+        "name": "acceptance-audit（题目 06 独立验收检查）",
+        "source_version": "v0.3.0",
+        "location": "skills/acceptance-audit/SKILL.md、skills/acceptance-audit/scripts/acceptance_audit.py",
+        "scenario": "交付前逐轮复检规则、场景、覆盖率、泄密、提交规范与部署证据",
+        "loaded_at": "2026-11-13T22:10",
+        "usage_location": "交付前每轮修复后",
+        "reason": "依据原题逐条机器判定，输出逐项明细与 JSON",
+        "input_output": "输入：仓库路径；输出：23 项检查的 PASS/FAIL/待补证明细",
+        "help": "实际帮助：检出 R4-01 判据与实现分层不符（判据缺陷而非业务缺陷）、泄密扫描漏检导致假 PASS、以及 C-08/C-09 只读既有结论的自证循环，并逐条修正判据后复检",
+        "limitations": "局限：仍是静态/数据库判定，页面浏览器端到端与真实竞态需另由独立 Agent 与 CI 覆盖",
+        "status": "pass",
+        "evidence": [
+          "E-SKILL-A-01",
+          "E-SKILL-A-02"
+        ]
+      }
+    ],
+    "limitations": [
+      {
+        "id": "L-01",
+        "scope": "讲解视频本体与本人配音",
+        "owner": "student",
+        "reason": "视频属人工交付物，本次只产出带时间点的逐段目录与要点（docs/12）",
+        "score_effect": "A4-08、A4-09 记 unknown，影响成果项折算",
+        "next_action": "学生本人录制并回填可访问链接后复验",
+        "evidence": [
+          "E-VIDEO-01"
+        ]
+      },
+      {
+        "id": "L-02",
+        "scope": "班级群当日提交凭据",
+        "owner": "student",
+        "reason": "群提交须学生本人在当日群内完成，本次只产出消息全文模板（docs/11）",
+        "score_effect": "A4-10 记 unknown",
+        "next_action": "学生本人在当日群内发送并回填凭据后复验",
+        "evidence": [
+          "E-GROUP-01"
+        ]
+      },
+      {
+        "id": "L-03",
+        "scope": "feat/fix 提交的工作项编号核验",
+        "owner": "platform",
+        "reason": "本机未安装 meegle CLI，无法执行 meegle workitem get 核验编号",
+        "score_effect": "B4-03 记 partial（消息格式合规，编号未核验）",
+        "next_action": "提供可用 meegle CLI 或工作项编号后回填提交消息",
+        "evidence": [
+          "E-GIT-02"
+        ]
+      },
+      {
+        "id": "L-04",
+        "scope": "go test -race 本机执行",
+        "owner": "platform",
+        "reason": "本机无 C 编译器且 Docker 守护进程未运行，-race 无法执行；CI 中已配置该步骤",
+        "score_effect": "A3-06 记 good（功能级验证充分，竞态检测待补证）",
+        "next_action": "以 CI 运行记录补证竞态检测结论",
+        "evidence": [
+          "E-PIPE-02",
+          "E-TESTAGENT-01"
+        ]
+      },
+      {
+        "id": "L-05",
+        "scope": "Token 消耗基准 B",
+        "owner": "teacher",
+        "reason": "教师未发布同题同范围的可信基准，profiles/06.json 的 token_baselines 为空",
+        "score_effect": "Token 项按「总量已知、基准缺失」记 unknown，责任方 teacher",
+        "next_action": "教师发布基准后按 N/B 复算 Token 得分",
+        "evidence": [
+          "E-TOKEN-01"
+        ]
+      },
+      {
+        "id": "L-06",
+        "scope": "规则发布/清单核准/评分校准记录",
+        "owner": "teacher",
+        "reason": "本次交付未获得清单发布、核准与校准的书面证据",
+        "score_effect": "审计整体按「待核定」处理，不影响成果与过程分的计算",
+        "next_action": "由教师补齐发布与校准记录",
+        "evidence": [
+          "E-CHECKPOINT-01"
+        ]
+      },
+      {
+        "id": "L-07",
+        "scope": "部署地址无公网常驻主机",
+        "owner": "student",
+        "reason": "本机无云主机，部署在流水线运行器/本机进程内完成，无对外可访问 URL",
+        "score_effect": "A4-06 记 good（版本对应与冒烟成功，地址形态受限）",
+        "next_action": "如需公网地址，配置 DEPLOY_TARGET 与 DEPLOY_TOKEN 后由流水线重新发布",
+        "evidence": [
+          "E-DEPLOY-01"
+        ]
+      }
+    ],
+    "understanding": [],
+    "daily": []
+  },
+  "evidence": [
+    {
+      "id": "E-REQ-01",
+      "level": "artifact",
+      "provenance": "仓库文档",
+      "location": "docs/01-需求分析.md",
+      "summary": "题面解析、R1–R8 规则编号、S1–S5 场景、假设清单 A1–A7 与 R↔S↔用例↔演示↔讲解五方对照表。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-PRO-01",
+      "level": "artifact",
+      "provenance": "仓库文档",
+      "location": "docs/02-原型设计.md、internal/httpapi/templates/",
+      "summary": "四个业务页面的状态机与页面状态说明；原型本体为真实模板。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-PLAN-01",
+      "level": "artifact",
+      "provenance": "仓库文档",
+      "location": "docs/03-任务规划.md",
+      "summary": "任务到需求编号的映射、依赖关系、完成条件与测试验收对应。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-SRC-01",
+      "level": "artifact",
+      "provenance": "仓库源码",
+      "location": "internal/domain、internal/store、internal/service、internal/supplier、internal/httpapi、cmd/server、cmd/mockgen",
+      "summary": "R1–R8 的服务端实现、SQLite 持久化、回调签名校验、四个业务页面与模拟供应商。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-SCHEMA-01",
+      "level": "artifact",
+      "provenance": "仓库源码",
+      "location": "internal/store/schema.sql",
+      "summary": "需求/生成任务/候选/事件四张表、(requirement_id, request_no) 复合唯一索引与 is_current 标记。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-TEST-01",
+      "level": "raw_tool",
+      "provenance": "本机执行输出",
+      "location": "evidence/go-test-output.txt",
+      "summary": "go test ./... -count=1 的完整原始输出（各包 ok 行）。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-COV-01",
+      "level": "artifact",
+      "provenance": "本机执行产物",
+      "location": "evidence/coverage-summary.txt、evidence/coverage.out",
+      "summary": "唯一口径覆盖率脚本 scripts/coverage_gate.py 的汇总与原始剖面。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-SCN-01",
+      "level": "raw_tool",
+      "provenance": "本机执行输出",
+      "location": "evidence/scenario-verify.log、evidence/scenario-verify-default-clock.log",
+      "summary": "scripts/verify_scenarios.py 五组场景逐条断言的真实输出（默认 60 秒口径与教学时钟两种运行）。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-AGENT-01",
+      "level": "artifact",
+      "provenance": "仓库文档",
+      "location": "AGENTS.md、docs/agents/AGENTS-v1.0.md、docs/agents/AGENTS-读取记录.md",
+      "summary": "项目级 Agent 约束、版本快照与逐次读取记录。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-SKILL-B-01",
+      "level": "artifact",
+      "provenance": "仓库文档",
+      "location": "skills/material-guard/SKILL.md、skills/material-guard/scripts/material_guard.py",
+      "summary": "自编业务 Skill：七要素说明 + G1–G9 数据库不变量与源码一致性判定脚本。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-SKILL-B-02",
+      "level": "raw_tool",
+      "provenance": "本机执行输出",
+      "location": "evidence/material-guard.md、evidence/material-guard.json",
+      "summary": "material-guard 判定脚本的原始输出与 JSON 结果。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-SKILL-A-01",
+      "level": "artifact",
+      "provenance": "仓库文档",
+      "location": "skills/acceptance-audit/SKILL.md、skills/acceptance-audit/scripts/acceptance_audit.py",
+      "summary": "自编验收 Skill：R1–R8 与共同要求逐项独立核验脚本（含泄密双规则与覆盖率复算）。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-SKILL-A-02",
+      "level": "raw_tool",
+      "provenance": "本机执行输出",
+      "location": "evidence/acceptance-audit/检查项明细.md、evidence/acceptance-audit/acceptance-audit.json",
+      "summary": "acceptance-audit 的逐项判定明细与 JSON 结果。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-SKILL-USE-01",
+      "level": "artifact",
+      "provenance": "仓库文档",
+      "location": "skill-usage.md、docs/08-Skill使用记录.md",
+      "summary": "全部实际使用 Skill 的位置、原因、输入输出、帮助与局限。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-PROMPT-01",
+      "level": "artifact",
+      "provenance": "仓库文档",
+      "location": "docs/06-会话导出.md、evidence/会话事件清单.jsonl",
+      "summary": "全过程可见提示词、回复摘要、工具结果与结构化事件清单。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-AI-01",
+      "level": "artifact",
+      "provenance": "仓库文档",
+      "location": "docs/09-AI使用说明.md",
+      "summary": "AI 与学生分工、审核纠错记录与未弱化测试的声明。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-TESTAGENT-01",
+      "level": "artifact",
+      "provenance": "独立会话产物",
+      "location": "evidence/independent-test-report.md",
+      "summary": "独立测试 Agent（全新上下文、读取原题与代码）的完整报告：9 条缺陷与复现输出。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-ACCEPTAGENT-01",
+      "level": "artifact",
+      "provenance": "独立会话产物",
+      "location": "evidence/independent-acceptance-report.md",
+      "summary": "独立验收 Agent（全新上下文、依据原题逐项核验）的验收报告与结论。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-GIT-01",
+      "level": "raw_tool",
+      "provenance": "远端 API 报文",
+      "location": "evidence/github-mcp/create-repository-transcript.json",
+      "summary": "GitHub MCP create_repository 的请求与响应报文（建仓事实）。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-GIT-02",
+      "level": "raw_tool",
+      "provenance": "远端 API 报文",
+      "location": "evidence/github-mcp/push-exact-dev06.json、evidence/github-mcp/push-exact-main.json",
+      "summary": "Git Data API 复现提交的逐条映射：blob/tree SHA 与本地逐一相同，commit SHA 因 GitHub 时区规范化而不同。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-GIT-03",
+      "level": "raw_tool",
+      "provenance": "远端 API 报文",
+      "location": "evidence/github-mcp/branch-protection.json、evidence/github-mcp/direct-push-main-probe.json",
+      "summary": "main 分支保护规则读取结果与直推 main 被拒（409）的真实响应。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-GIT-04",
+      "level": "raw_tool",
+      "provenance": "远端 API 报文",
+      "location": "evidence/github-mcp/pull-request.json、evidence/github-mcp/merge-pull-request.json",
+      "summary": "PR 创建、状态检查与合并的请求响应报文。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-PIPE-01",
+      "level": "artifact",
+      "provenance": "仓库配置",
+      "location": ".github/workflows/ci.yml",
+      "summary": "流水线定义：质量检查、gofmt、go vet、单测与竞态、覆盖率门禁、构建、部署、健康检查、业务冒烟。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-PIPE-02",
+      "level": "raw_tool",
+      "provenance": "远端 API 报文",
+      "location": "evidence/github-mcp/workflow-runs.json、evidence/github-mcp/ci-run-43535651446-quality-gate.log",
+      "summary": "GitHub Actions 实际运行记录与失败轮次的原始作业日志。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-DEPLOY-01",
+      "level": "raw_tool",
+      "provenance": "本机执行输出",
+      "location": "evidence/deployment-main.log",
+      "summary": "scripts/deploy.sh 针对合并提交的部署日志：构建、健康检查、五组场景冒烟与回退说明。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-VIDEO-01",
+      "level": "gap",
+      "provenance": "交付缺口登记",
+      "location": "docs/12-讲解视频带时间点目录.md",
+      "summary": "已产出带时间点的讲解目录与逐段要点；视频本体与配音为人工交付物，待学生本人录制回填。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-GROUP-01",
+      "level": "gap",
+      "provenance": "交付缺口登记",
+      "location": "docs/11-班级群提交消息.md",
+      "summary": "已产出班级群消息全文模板；实际发送与凭据由学生本人在当日群内完成，待补证。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-TOKEN-01",
+      "level": "artifact",
+      "provenance": "本机执行产物",
+      "location": "evidence/token-ledger.json",
+      "summary": "全阶段逐请求 Token 去重台账（来源：会话归档的供应商 usage 字段）。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-CHECKPOINT-01",
+      "level": "artifact",
+      "provenance": "仓库文档",
+      "location": "docs/13-阶段检查点与版本索引.md",
+      "summary": "七阶段检查点、进入条件、产物版本与交接记录。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-DEFIX-01",
+      "level": "artifact",
+      "provenance": "本机执行产物",
+      "location": "evidence/defect-fix-round1.md、evidence/defect-fix-round1-tools.md、evidence/defect-fix-round1-skills.md",
+      "summary": "独立测试检出的 9 条缺陷的「发现问题 → 修正 → 复检」闭环记录。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-SECRETSCAN-01",
+      "level": "raw_tool",
+      "provenance": "本机执行输出",
+      "location": "evidence/acceptance-audit/负向验证-泄密扫描.txt、evidence/material-guard-负向验证.txt",
+      "summary": "泄密扫描（已知凭据值 + 敏感形态双规则、无白名单）与 material-guard 的负向验证原始输出。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    },
+    {
+      "id": "E-ASSUMPTION-01",
+      "level": "artifact",
+      "provenance": "仓库文档",
+      "location": "docs/01-需求分析.md（A1–A7 假设清单）",
+      "summary": "题面未明确事项的假设登记，含理由、影响面与确认状态。",
+      "revision_time": "709c220",
+      "scope": "题目 06 交付物"
+    }
+  ]
+}

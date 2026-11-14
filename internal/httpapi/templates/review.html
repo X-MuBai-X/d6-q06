@@ -1,0 +1,33 @@
+{{define "review.html"}}<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>{{.Title}}</title>
+{{template "styles" .}}
+</head>
+<body>
+{{template "nav" .}}
+<main>
+  <h1>候选复核队列</h1>
+  {{template "flash" .}}
+  <div class="card">
+    <table>
+      <thead><tr><th>活动名称</th><th>状态</th><th>用途</th><th>操作</th></tr></thead>
+      <tbody>
+      {{with .Data}}{{range .Items}}
+        <tr>
+          <td>{{.ActivityName}}</td>
+          <td><span class="tag">{{statusLabel .Status}}</span></td>
+          <td>{{.Purpose}}</td>
+          <td><a href="/requirements/{{.ID}}">打开并复核</a></td>
+        </tr>
+      {{else}}
+        <tr><td colspan="4" class="muted">当前没有待复核的需求。</td></tr>
+      {{end}}{{end}}
+      </tbody>
+    </table>
+    <p class="muted">复核对象只能是该需求的当前候选；上一版候选只作历史，不能再复核。</p>
+  </div>
+</main>
+</body>
+</html>{{end}}

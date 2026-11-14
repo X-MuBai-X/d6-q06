@@ -1,0 +1,28 @@
+==============================================================================
+D-06 负向验证：泄密扫描规则（已知凭据值检测 + 敏感形态检测）
+==============================================================================
+[准备] 仓库副本：C:\Users\26765\.minimax\sessions\mvs_11e0ec75a31b47f2a6d760f58ea956b9\workspace\negval\repo-copy（排除 .git/data/bin/logs，仓库本身不做任何改动）
+[准备] 从副本的 cmd/server/main.go 读到演示口令真实值：Stu*******6（脚本不打印明文）
+[注入] 副本中人为放置明文演示口令：docs/_neg-leak-password.md
+[注入] 副本中人为放置 ghp_ 假令牌：evidence/_neg-leak-token.txt
+
+---------- 第 1 次运行（副本中有人为泄露）----------
+退出码 = 1
+| C-11 | 共同要求 | §3/§8 | 证据与文档中无明文口令、密钥与令牌 | **FAIL** | 命中 2 处：['evidence\\_neg-leak-token.txt:2（GitHub PAT）', 'docs\\_neg-leak-password.md:3（已知演示凭据 demoPassword 明文，值 Stu*******6）'] | 把凭据改为掩码或移到仓库外的凭据文件 |
+| C-14 | 共同要求 | §5/§8 | 演示凭据明文只存在于 cmd/server/main.go | **FAIL** | 以下 2 处仍含已知演示凭据明文：['docs\\_neg-leak-password.md（demoPassword，值 Stu*******6）', 'internal\\service\\service_test.go（demoPassword，值 Stu*******6）'] | 改为从 cmd/server/main.go 读取该常量或改用掩码展示（不得新增例外目录） |
+- C-11：证据与文档中无明文口令、密钥与令牌 —— 命中 2 处：['evidence\\_neg-leak-token.txt:2（GitHub PAT）', 'docs\\_neg-leak-password.md:3（已知演示凭据 demoPassword 明文，值 Stu*******6）']；整改：把凭据改为掩码或移到仓库外的凭据文件
+- C-14：演示凭据明文只存在于 cmd/server/main.go —— 以下 2 处仍含已知演示凭据明文：['docs\\_neg-leak-password.md（demoPassword，值 Stu*******6）', 'internal\\service\\service_test.go（demoPassword，值 Stu*******6）']；整改：改为从 cmd/server/main.go 读取该常量或改用掩码展示（不得新增例外目录）
+[结论 1] 新规则对人为泄露判定 C-11 FAIL 且点名文件：成立
+[对照] 旧形态正则（口令[:=] 形态）对「口令统一为 xxx」的写法命中：False（这正是 D-06 中 C-11 假 PASS 的根因）
+[对照] 新的已知值检测对同一句命中：True（按值比对，不依赖书写格式）
+
+[清理] 已删除副本中的两处人为泄露
+
+---------- 第 2 次运行（副本中泄露已移除）----------
+退出码 = 1
+| C-11 | 共同要求 | §3/§8 | 证据与文档中无明文口令、密钥与令牌 | **PASS** | 全量扫描 evidence/ 与 docs/ 未命中（无白名单、无例外目录；已知凭据值比对 1 项 + 8 类形态正则） | 无需复验，结论已由证据支撑 |
+| C-14 | 共同要求 | §5/§8 | 演示凭据明文只存在于 cmd/server/main.go | **FAIL** | 以下 1 处仍含已知演示凭据明文：['internal\\service\\service_test.go（demoPassword，值 Stu*******6）'] | 改为从 cmd/server/main.go 读取该常量或改用掩码展示（不得新增例外目录） |
+[结论 2] 移除泄露后 C-11 恢复 PASS：成立
+[说明] C-14（仓库内其他位置）的残留项不由本次负向验证产生，属并行任务范围内的文件：| C-14 | 共同要求 | §5/§8 | 演示凭据明文只存在于 cmd/server/main.go | **FAIL** | 以下 1 处仍含已知演示凭据明文：['internal\\service\\service_test.go（demoPassword，值 Stu*******6）'] | 改为从 cmd/server/main.go 读取该常量或改用掩码展示（不得新增例外目录） |
+
+[汇总] 负向验证通过（C-11：有人为泄露时 FAIL 并点名文件 → 移除后 PASS）

@@ -1,0 +1,10 @@
+{
+  "attempt": "PUT contents on protected branch",
+  "branch": "main",
+  "status": 409,
+  "response": {
+    "message": "Could not create file: Required status check \"quality-gate\" is expected.",
+    "documentation_url": "https://docs.github.com/articles/about-protected-branches",
+    "status": "409"
+  }
+}
