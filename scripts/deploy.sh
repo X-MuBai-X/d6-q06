@@ -9,6 +9,7 @@ set -euo pipefail
 
 COMMIT_SHA="${1:?必须传入部署提交 SHA}"
 TARGET_BASE="${2:-${DEPLOY_TARGET:-http://127.0.0.1:8080}}"
+MOCK_BASE="${DEPLOY_MOCK_TARGET:-http://127.0.0.1:8090}"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
@@ -16,6 +17,7 @@ echo "=== 部署开始 ==="
 echo "部署提交 SHA : ${COMMIT_SHA}"
 echo "当前仓库 HEAD : $(git rev-parse HEAD 2>/dev/null || echo '非 Git 仓库')"
 echo "目标地址     : ${TARGET_BASE}"
+echo "模拟供应商地址: ${MOCK_BASE}"
 
 # Python 解释器探测：CI（ubuntu）用 python3；部分本机环境只有 python。
 if [ -n "${PYTHON_BIN:-}" ]; then
@@ -71,7 +73,7 @@ for i in $(seq 1 30); do
 done
 
 # 5) 业务冒烟：跑五组完整工作场景
-"${PYTHON_BIN}" scripts/verify_scenarios.py --base "${TARGET_BASE}" --mock "http://127.0.0.1:8090" \
+"${PYTHON_BIN}" scripts/verify_scenarios.py --base "${TARGET_BASE}" --mock "${MOCK_BASE}" \
   | tee evidence/scenario-verify.log
 
 echo "=== 部署完成，版本 ${COMMIT_SHA} ==="
