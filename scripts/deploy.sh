@@ -17,6 +17,19 @@ echo "部署提交 SHA : ${COMMIT_SHA}"
 echo "当前仓库 HEAD : $(git rev-parse HEAD 2>/dev/null || echo '非 Git 仓库')"
 echo "目标地址     : ${TARGET_BASE}"
 
+# Python 解释器探测：CI（ubuntu）用 python3；部分本机环境只有 python。
+if [ -n "${PYTHON_BIN:-}" ]; then
+  :
+elif command -v python3 >/dev/null 2>&1 && python3 --version >/dev/null 2>&1; then
+  PYTHON_BIN=python3
+elif command -v python >/dev/null 2>&1; then
+  PYTHON_BIN=python
+else
+  echo "未找到可用的 Python 解释器（python3/python），部署中止"
+  exit 1
+fi
+echo "Python 解释器: ${PYTHON_BIN} ($(${PYTHON_BIN} --version 2>&1))"
+
 # 1) 端口预检：占用即失败，避免把上一轮的进程当成新版本
 for port in 8080 8090; do
   if command -v ss >/dev/null 2>&1 && ss -ltn | awk '{print $4}' | grep -q ":${port}$"; then
@@ -58,7 +71,7 @@ for i in $(seq 1 30); do
 done
 
 # 5) 业务冒烟：跑五组完整工作场景
-python3 scripts/verify_scenarios.py --base "${TARGET_BASE}" --mock "http://127.0.0.1:8090" \
+"${PYTHON_BIN}" scripts/verify_scenarios.py --base "${TARGET_BASE}" --mock "http://127.0.0.1:8090" \
   | tee evidence/scenario-verify.log
 
 echo "=== 部署完成，版本 ${COMMIT_SHA} ==="
