@@ -1,13 +1,13 @@
 {
   "status": "PASS",
-  "db": "C:\\Users\\26765\\Documents\\trae_projects\\skills\\2组\\素材\\d6\\data\\run6.db",
+  "db": "C:\\Users\\26765\\Documents\\trae_projects\\skills\\2组\\素材\\d6\\data\\run8.db",
   "checks": [
     {
       "id": "G1",
       "rule": "R1",
       "name": "成功任务的描述快照非空",
       "status": "PASS",
-      "evidence": "检查 4 条成功任务；异常记录：无"
+      "evidence": "检查 5 条成功任务；异常记录：无"
     },
     {
       "id": "G2",
@@ -59,6 +59,13 @@
       "evidence": "缺创建事件的需求：[]；缺事件的任务：[]"
     },
     {
+      "id": "G9",
+      "rule": "R7",
+      "name": "撤销的需求不得复活（状态不得被改写，撤销后不得再出现推进事件）",
+      "status": "PASS",
+      "evidence": "撤销后状态被改写的需求：[]；撤销后仍出现推进事件：[]"
+    },
+    {
       "id": "S1",
       "rule": "题面一致性",
       "name": "最大生成次数为 3",
@@ -92,11 +99,25 @@
       "name": "CanAdopt 的允许状态集合符合题面",
       "status": "PASS",
       "evidence": "internal/domain/rules.go CanAdopt：缺少 无"
+    },
+    {
+      "id": "S3-CallCanStartGeneration",
+      "rule": "题面一致性",
+      "name": "业务层存在 CanStartGeneration 的调用点（不只看声明）",
+      "status": "PASS",
+      "evidence": "调用点：['internal/service/requirement.go:67', 'internal/service/requirement.go:103']"
+    },
+    {
+      "id": "S3-CallInStartGeneration",
+      "rule": "题面一致性",
+      "name": "StartGeneration 内调用 CanStartGeneration（撤销后不得再发起）",
+      "status": "PASS",
+      "evidence": "internal/service/requirement.go 的 StartGeneration：已调用 CanStartGeneration"
     }
   ],
   "coverage": {
     "status": "PASS",
-    "report": "题目 06 单元测试覆盖率门禁报告\n============================================================\n覆盖率剖面：C:\\Users\\26765\\Documents\\trae_projects\\skills\\2组\\素材\\d6\\evidence\\coverage.out\n统计口径：解析覆盖率剖面按语句数统计 covered/total（与 go tool cover 一致）\n排除项：无（自编的数据库访问与 HTTP 处理代码全部纳入统计）\n\n【各包覆盖率】\n  creative-studio/cmd/mockgen               80.79%  (122/151)\n  creative-studio/cmd/server                57.97%  (40/69)\n  creative-studio/internal/domain           89.71%  (61/68)\n  creative-studio/internal/httpapi          89.69%  (513/572)\n  creative-studio/internal/service          85.09%  (411/483)\n  creative-studio/internal/store            86.38%  (298/345)\n  creative-studio/internal/supplier         87.10%  (27/31)\n\n【整体覆盖率】 85.63%  (1472/1719)\n  核心包 creative-studio/internal/domain     89.71%\n  核心包 creative-studio/internal/store      86.38%\n  核心包 creative-studio/internal/service    85.09%\n  核心包 creative-studio/internal/httpapi    89.69%\n  核心包 creative-studio/internal/supplier   87.10%\n\n【结论】PASS（整体与各核心包均 ≥ 85.0%）\n"
+    "report": "题目 06 单元测试覆盖率门禁报告\r\n============================================================\r\n覆盖率剖面：C:\\Users\\26765\\Documents\\trae_projects\\skills\\2组\\素材\\d6\\evidence\\coverage.out\r\n统计口径：解析覆盖率剖面按语句数统计 covered/total（与 go tool cover 一致）\r\n排除项：无（自编的数据库访问与 HTTP 处理代码全部纳入统计）\r\n\r\n【各包覆盖率】\r\n  creative-studio/cmd/mockgen               80.65%  (125/155)\r\n  creative-studio/cmd/server                56.34%  (40/71)\r\n  creative-studio/internal/domain           89.71%  (61/68)\r\n  creative-studio/internal/httpapi          89.51%  (529/591)\r\n  creative-studio/internal/service          86.76%  (439/506)\r\n  creative-studio/internal/store            86.80%  (309/356)\r\n  creative-studio/internal/supplier         87.10%  (27/31)\r\n\r\n【整体覆盖率】 86.05%  (1530/1778)\r\n  核心包 creative-studio/internal/domain     89.71%\r\n  核心包 creative-studio/internal/store      86.80%\r\n  核心包 creative-studio/internal/service    86.76%\r\n  核心包 creative-studio/internal/httpapi    89.51%\r\n  核心包 creative-studio/internal/supplier   87.10%\r\n\r\n【结论】PASS（整体与各核心包均 ≥ 85.0%）\r\n"
   },
-  "generated_at": "2026-11-13T14:03:14.437530+00:00"
+  "generated_at": "2026-11-14T00:33:33.591422+00:00"
 }

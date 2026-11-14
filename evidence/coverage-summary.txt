@@ -5,19 +5,19 @@
 排除项：无（自编的数据库访问与 HTTP 处理代码全部纳入统计）
 
 【各包覆盖率】
-  creative-studio/cmd/mockgen               80.79%  (122/151)
-  creative-studio/cmd/server                57.97%  (40/69)
+  creative-studio/cmd/mockgen               80.65%  (125/155)
+  creative-studio/cmd/server                56.34%  (40/71)
   creative-studio/internal/domain           89.71%  (61/68)
-  creative-studio/internal/httpapi          89.69%  (513/572)
-  creative-studio/internal/service          85.43%  (422/494)
-  creative-studio/internal/store            86.46%  (300/347)
+  creative-studio/internal/httpapi          89.51%  (529/591)
+  creative-studio/internal/service          86.76%  (439/506)
+  creative-studio/internal/store            86.80%  (309/356)
   creative-studio/internal/supplier         87.10%  (27/31)
 
-【整体覆盖率】 85.74%  (1485/1732)
+【整体覆盖率】 86.05%  (1530/1778)
   核心包 creative-studio/internal/domain     89.71%
-  核心包 creative-studio/internal/store      86.46%
-  核心包 creative-studio/internal/service    85.43%
-  核心包 creative-studio/internal/httpapi    89.69%
+  核心包 creative-studio/internal/store      86.80%
+  核心包 creative-studio/internal/service    86.76%
+  核心包 creative-studio/internal/httpapi    89.51%
   核心包 creative-studio/internal/supplier   87.10%
 
 【结论】PASS（整体与各核心包均 ≥ 85.0%）

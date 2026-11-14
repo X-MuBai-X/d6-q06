@@ -1,0 +1,178 @@
+{
+  "owner": "X-MuBai-X",
+  "repo": "d6-q06",
+  "branch": "dev/06",
+  "branch_tip_local": "621c85fbe644bc1cb6083e2740fbb18d690299e2",
+  "transport": "GitHub REST API (git/blobs, git/trees, git/commits, git/refs)",
+  "reason": "本机 git push over HTTPS 被网络策略阻断（Recv failure: Connection was reset）",
+  "commits": [
+    {
+      "local_sha": "bd4fc224726aa4b2da1bfc86e653b19d5862a5ef",
+      "remote_sha": "2e79dd495a80386709e77933279f2665108c4c90",
+      "tree": "82d967a8ba062216d967e27c18d6f7a6d2c465d6",
+      "parents": [],
+      "message_first_line": "[docs] [v0.1.0] 初始化仓库说明与分支骨架"
+    },
+    {
+      "local_sha": "d75f59121487dbae6c135386ed588330ccd1ae96",
+      "remote_sha": "6ab839b08d0d84ad76413c5092a802296e92c4c3",
+      "tree": "bac5e2b8d8aee3c6fcafbf14e9081458786cc25a",
+      "parents": [
+        "bd4fc224726aa4b2da1bfc86e653b19d5862a5ef"
+      ],
+      "message_first_line": "[docs] [v0.1.0] 补齐题面快照需求分析原型设计与任务规划"
+    },
+    {
+      "local_sha": "0e88d639d7dfc59dbf2f7f47cfbb408ea674309f",
+      "remote_sha": "08119151f0a30f93414544bf4e6d804004a3a90f",
+      "tree": "d413765893acd176a8d8523322f554b45576c199",
+      "parents": [
+        "d75f59121487dbae6c135386ed588330ccd1ae96"
+      ],
+      "message_first_line": "[docs] [v0.1.0] 落盘项目级AGENTS约束与版本快照读取记录"
+    },
+    {
+      "local_sha": "cc98ddc5098e4aae511e5501d4a690b644758cec",
+      "remote_sha": "6beffa5f24124b7864ada54ffdb11067f1e755b6",
+      "tree": "c81105f39643a29768143c4ee00b0343f847bb81",
+      "parents": [
+        "0e88d639d7dfc59dbf2f7f47cfbb408ea674309f"
+      ],
+      "message_first_line": "[feat] [v0.1.0] [#TBD] 实现营销素材生图需求生成回调复核采用撤销完整闭环"
+    },
+    {
+      "local_sha": "0ae02588c17a02a1a74a2225d91db1909f6eb636",
+      "remote_sha": "f70fa6b4557ce22d69e85f384c83f1bba9ef53c6",
+      "tree": "770907f77c06b9338d8390d0a922b48d7e746c15",
+      "parents": [
+        "cc98ddc5098e4aae511e5501d4a690b644758cec"
+      ],
+      "message_first_line": "[opt] [v0.1.0] 实现material-guard与acceptance-audit判定脚本"
+    },
+    {
+      "local_sha": "8769b797d4d586c44209cf11b025336278752fe7",
+      "remote_sha": "7450cbf31e0b4afeb0605e0d2ca26f39bf764088",
+      "tree": "48896524c395c2c5672ab86b66a6511ea586a17b",
+      "parents": [
+        "0ae02588c17a02a1a74a2225d91db1909f6eb636"
+      ],
+      "message_first_line": "[opt] [v0.1.0] 配置CI流水线覆盖率门禁与自动部署脚本"
+    },
+    {
+      "local_sha": "10e0d1b155a7f3267ebe36abc2cca9b6007108ae",
+      "remote_sha": "92a234898a5246d954a3d92767760eb91985948e",
+      "tree": "447fb32314a54ef8a71b1e23179f91f3d5ea6455",
+      "parents": [
+        "8769b797d4d586c44209cf11b025336278752fe7"
+      ],
+      "message_first_line": "[fix] [v0.1.0] [#TBD] 修正验收Skill的R4-01判据并补异常事件种类注册表"
+    },
+    {
+      "local_sha": "b51426f40c2f326b5125eb6caa09c6c68d9a94fc",
+      "remote_sha": "8ee8a0b349e33701e288317ed88d547b78b1aa45",
+      "tree": "1c936e6b8a105b9c01ebed9eb27c296d25e6b60d",
+      "parents": [
+        "10e0d1b155a7f3267ebe36abc2cca9b6007108ae"
+      ],
+      "message_first_line": "[docs] [v0.1.0] 归档运行会话导出Skill使用记录AI说明与交付类文档"
+    },
+    {
+      "local_sha": "621c85fbe644bc1cb6083e2740fbb18d690299e2",
+      "remote_sha": "20d262e7474d7fb76084cc5601288caa792e4617",
+      "tree": "b2463d51dc5126d1a09d580fac06e12387547dfa",
+      "parents": [
+        "b51426f40c2f326b5125eb6caa09c6c68d9a94fc"
+      ],
+      "message_first_line": "[opt] [v0.1.0] 忽略Python字节码缓存避免误提交构建产物"
+    }
+  ],
+  "mappings": [
+    {
+      "local_sha": "bd4fc224726aa4b2da1bfc86e653b19d5862a5ef",
+      "remote_sha": "2e79dd495a80386709e77933279f2665108c4c90",
+      "tree_local": "82d967a8ba062216d967e27c18d6f7a6d2c465d6",
+      "tree_remote": "82d967a8ba062216d967e27c18d6f7a6d2c465d6",
+      "tree_equal": true,
+      "message_first_line": "[docs] [v0.1.0] 初始化仓库说明与分支骨架",
+      "reason": "GitHub 提交时区规范化为 +0000，commit 对象字节与本地 +0800 偏移不同；tree SHA 一致"
+    },
+    {
+      "local_sha": "d75f59121487dbae6c135386ed588330ccd1ae96",
+      "remote_sha": "6ab839b08d0d84ad76413c5092a802296e92c4c3",
+      "tree_local": "bac5e2b8d8aee3c6fcafbf14e9081458786cc25a",
+      "tree_remote": "bac5e2b8d8aee3c6fcafbf14e9081458786cc25a",
+      "tree_equal": true,
+      "message_first_line": "[docs] [v0.1.0] 补齐题面快照需求分析原型设计与任务规划",
+      "reason": "GitHub 提交时区规范化为 +0000，commit 对象字节与本地 +0800 偏移不同；tree SHA 一致"
+    },
+    {
+      "local_sha": "0e88d639d7dfc59dbf2f7f47cfbb408ea674309f",
+      "remote_sha": "08119151f0a30f93414544bf4e6d804004a3a90f",
+      "tree_local": "d413765893acd176a8d8523322f554b45576c199",
+      "tree_remote": "d413765893acd176a8d8523322f554b45576c199",
+      "tree_equal": true,
+      "message_first_line": "[docs] [v0.1.0] 落盘项目级AGENTS约束与版本快照读取记录",
+      "reason": "GitHub 提交时区规范化为 +0000，commit 对象字节与本地 +0800 偏移不同；tree SHA 一致"
+    },
+    {
+      "local_sha": "cc98ddc5098e4aae511e5501d4a690b644758cec",
+      "remote_sha": "6beffa5f24124b7864ada54ffdb11067f1e755b6",
+      "tree_local": "c81105f39643a29768143c4ee00b0343f847bb81",
+      "tree_remote": "c81105f39643a29768143c4ee00b0343f847bb81",
+      "tree_equal": true,
+      "message_first_line": "[feat] [v0.1.0] [#TBD] 实现营销素材生图需求生成回调复核采用撤销完整闭环",
+      "reason": "GitHub 提交时区规范化为 +0000，commit 对象字节与本地 +0800 偏移不同；tree SHA 一致"
+    },
+    {
+      "local_sha": "0ae02588c17a02a1a74a2225d91db1909f6eb636",
+      "remote_sha": "f70fa6b4557ce22d69e85f384c83f1bba9ef53c6",
+      "tree_local": "770907f77c06b9338d8390d0a922b48d7e746c15",
+      "tree_remote": "770907f77c06b9338d8390d0a922b48d7e746c15",
+      "tree_equal": true,
+      "message_first_line": "[opt] [v0.1.0] 实现material-guard与acceptance-audit判定脚本",
+      "reason": "GitHub 提交时区规范化为 +0000，commit 对象字节与本地 +0800 偏移不同；tree SHA 一致"
+    },
+    {
+      "local_sha": "8769b797d4d586c44209cf11b025336278752fe7",
+      "remote_sha": "7450cbf31e0b4afeb0605e0d2ca26f39bf764088",
+      "tree_local": "48896524c395c2c5672ab86b66a6511ea586a17b",
+      "tree_remote": "48896524c395c2c5672ab86b66a6511ea586a17b",
+      "tree_equal": true,
+      "message_first_line": "[opt] [v0.1.0] 配置CI流水线覆盖率门禁与自动部署脚本",
+      "reason": "GitHub 提交时区规范化为 +0000，commit 对象字节与本地 +0800 偏移不同；tree SHA 一致"
+    },
+    {
+      "local_sha": "10e0d1b155a7f3267ebe36abc2cca9b6007108ae",
+      "remote_sha": "92a234898a5246d954a3d92767760eb91985948e",
+      "tree_local": "447fb32314a54ef8a71b1e23179f91f3d5ea6455",
+      "tree_remote": "447fb32314a54ef8a71b1e23179f91f3d5ea6455",
+      "tree_equal": true,
+      "message_first_line": "[fix] [v0.1.0] [#TBD] 修正验收Skill的R4-01判据并补异常事件种类注册表",
+      "reason": "GitHub 提交时区规范化为 +0000，commit 对象字节与本地 +0800 偏移不同；tree SHA 一致"
+    },
+    {
+      "local_sha": "b51426f40c2f326b5125eb6caa09c6c68d9a94fc",
+      "remote_sha": "8ee8a0b349e33701e288317ed88d547b78b1aa45",
+      "tree_local": "1c936e6b8a105b9c01ebed9eb27c296d25e6b60d",
+      "tree_remote": "1c936e6b8a105b9c01ebed9eb27c296d25e6b60d",
+      "tree_equal": true,
+      "message_first_line": "[docs] [v0.1.0] 归档运行会话导出Skill使用记录AI说明与交付类文档",
+      "reason": "GitHub 提交时区规范化为 +0000，commit 对象字节与本地 +0800 偏移不同；tree SHA 一致"
+    },
+    {
+      "local_sha": "621c85fbe644bc1cb6083e2740fbb18d690299e2",
+      "remote_sha": "20d262e7474d7fb76084cc5601288caa792e4617",
+      "tree_local": "b2463d51dc5126d1a09d580fac06e12387547dfa",
+      "tree_remote": "b2463d51dc5126d1a09d580fac06e12387547dfa",
+      "tree_equal": true,
+      "message_first_line": "[opt] [v0.1.0] 忽略Python字节码缓存避免误提交构建产物",
+      "reason": "GitHub 提交时区规范化为 +0000，commit 对象字节与本地 +0800 偏移不同；tree SHA 一致"
+    }
+  ],
+  "blobs": 98,
+  "mismatches": [],
+  "ref_action": "created",
+  "ref": "refs/heads/dev/06",
+  "ref_sha": "20d262e7474d7fb76084cc5601288caa792e4617",
+  "ref_sha_local": "621c85fbe644bc1cb6083e2740fbb18d690299e2"
+}

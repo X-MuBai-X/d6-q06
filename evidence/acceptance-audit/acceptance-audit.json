@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-13T14:22:45.644471+00:00",
-  "status": "FAIL",
+  "generated_at": "2026-11-14T00:34:14.978084+00:00",
+  "status": "待补证",
   "items": [
     {
       "id": "R1-01",
@@ -8,7 +8,7 @@
       "rule": "R1",
       "name": "每次生成保存当时描述，历史不被覆盖",
       "status": "PASS",
-      "evidence": "internal/service/requirement.go 125: DescriptionSnapshot: req.Description,",
+      "evidence": "internal/service/requirement.go 138: DescriptionSnapshot: req.Description,",
       "verify": "无需复验，结论已由证据支撑"
     },
     {
@@ -17,7 +17,7 @@
       "rule": "R2",
       "name": "同一需求至多一个处理中任务且请求编号幂等",
       "status": "PASS",
-      "evidence": "internal/store/schema.sql 50: CREATE UNIQUE INDEX IF NOT EXISTS idx_one_processing_task；internal/service/requirement.go 101: existing, err := s.store.GetTaskByRequestNoTx(ctx, tx, requestNo)",
+      "evidence": "internal/store/schema.sql 50: CREATE UNIQUE INDEX IF NOT EXISTS idx_one_processing_task；internal/service/requirement.go 118: if other, err := s.store.GetTaskByRequestNoTx(ctx, tx, requestNo); err == nil {",
       "verify": "无需复验，结论已由证据支撑"
     },
     {
@@ -26,7 +26,7 @@
       "rule": "R3",
       "name": "失败/超时无候选、生成次数上限三次",
       "status": "PASS",
-      "evidence": "internal/domain/rules.go 9: // MaxAttempts 是单个素材需求允许发起的生成次数上限（题面 R3：最多三次）。；12: // GenerationTimeout 是题面 R3 规定的「60 秒内无有效终态」上限（真实业务口径）。；internal/service/callback.go 197: current.Status = domain.TaskTimeout",
+      "evidence": "internal/domain/rules.go 9: // MaxAttempts 是单个素材需求允许发起的生成次数上限（题面 R3：最多三次）。；12: // GenerationTimeout 是题面 R3 规定的「60 秒内无有效终态」上限（真实业务口径）。；internal/service/callback.go 198: current.Status = domain.TaskTimeout",
       "verify": "无需复验，结论已由证据支撑"
     },
     {
@@ -35,7 +35,7 @@
       "rule": "R4",
       "name": "回调鉴权、重复回调不重复建候选、异常可查",
       "status": "PASS",
-      "evidence": "internal/httpapi/server.go 219: if !supplier.VerifySignature(s.secret, body, r.Header.Get(\"X-Supplier-Signature\")) {；internal/domain/types.go 179: EventSignatureInvalid  = \"signature_invalid\"；internal/service/callback.go 72: kind = domain.EventCallbackDuplicate；internal/service/callback.go 56: if err := s.store.InsertEventTx(ctx, tx, newEvent(nil, \"\", \"\", domain.EventCallbackUnknown,",
+      "evidence": "internal/httpapi/server.go 229: if !supplier.VerifySignature(s.secret, body, r.Header.Get(\"X-Supplier-Signature\")) {；internal/domain/types.go 179: EventSignatureInvalid  = \"signature_invalid\"；internal/service/callback.go 72: kind = domain.EventCallbackDuplicate；internal/service/callback.go 56: if err := s.store.InsertEventTx(ctx, tx, newEvent(nil, \"\", \"\", domain.EventCallbackUnknown,",
       "verify": "无需复验，结论已由证据支撑"
     },
     {
@@ -44,7 +44,7 @@
       "rule": "R5",
       "name": "复核不通过必须写原因，确认采用才算交付",
       "status": "PASS",
-      "evidence": "internal/domain/rules.go 111: // ValidateReviewReason 校验复核不通过的原因（题面 R5：未通过须写原因）。；internal/service/requirement.go 289: func (s *Service) Adopt(ctx context.Context, actor *domain.User, requirementID, candidateID string) (*domain.Requirement, error) {",
+      "evidence": "internal/domain/rules.go 111: // ValidateReviewReason 校验复核不通过的原因（题面 R5：未通过须写原因）。；internal/service/requirement.go 302: func (s *Service) Adopt(ctx context.Context, actor *domain.User, requirementID, candidateID string) (*domain.Requirement, error) {",
       "verify": "无需复验，结论已由证据支撑"
     },
     {
@@ -53,7 +53,7 @@
       "rule": "R6",
       "name": "下一次生成后旧候选只作历史且不可复核/确认",
       "status": "PASS",
-      "evidence": "internal/service/requirement.go 209: // 历史候选（发起过一次新的生成之后）会以 ErrNotCurrentCandidate 明确拒绝。；internal/store/tx.go 156: // ClearCurrentCandidatesTx 在事务上下文内把需求的全部候选标记为历史。",
+      "evidence": "internal/service/requirement.go 222: // 历史候选（发起过一次新的生成之后）会以 ErrNotCurrentCandidate 明确拒绝。；internal/store/tx.go 162: // ClearCurrentCandidatesTx 在事务上下文内把需求的全部候选标记为历史。",
       "verify": "无需复验，结论已由证据支撑"
     },
     {
@@ -62,7 +62,7 @@
       "rule": "R7",
       "name": "确认采用前可撤销，迟到结果不恢复需求",
       "status": "PASS",
-      "evidence": "internal/service/callback.go 97: if err := s.store.InsertEventTx(ctx, tx, newEvent(nil, req.ID, task.ID, domain.EventLateResultIgnored, msg, now)); err != nil {；internal/service/requirement.go 363: func (s *Service) Withdraw(ctx context.Context, actor *domain.User, requirementID string) error {",
+      "evidence": "internal/service/callback.go 97: if err := s.store.InsertEventTx(ctx, tx, newEvent(nil, req.ID, task.ID, domain.EventLateResultIgnored, msg, now)); err != nil {；internal/service/requirement.go 376: func (s *Service) Withdraw(ctx context.Context, actor *domain.User, requirementID string) error {",
       "verify": "无需复验，结论已由证据支撑"
     },
     {
@@ -106,9 +106,9 @@
       "category": "共同要求",
       "rule": "§2",
       "name": "各阶段产物齐备",
-      "status": "FAIL",
-      "evidence": "缺少：['docs/12-讲解视频带时间点目录.md']",
-      "verify": "补齐阶段产物"
+      "status": "PASS",
+      "evidence": "需求分析、原型、计划、会话导出、Skill 记录、AI 说明、交付说明、讲解目录、skill-usage.md 均存在",
+      "verify": "无需复验，结论已由证据支撑"
     },
     {
       "id": "C-05",
@@ -151,9 +151,9 @@
       "category": "共同要求",
       "rule": "§2/§10",
       "name": "五组完整工作场景实测通过",
-      "status": "待补证",
-      "evidence": "未找到 evidence/scenario-verify.log",
-      "verify": "部署服务后执行 scripts/verify_scenarios.py"
+      "status": "PASS",
+      "evidence": "evidence/scenario-verify.log 显示全部场景断言通过",
+      "verify": "无需复验，结论已由证据支撑"
     },
     {
       "id": "T-01",
@@ -188,7 +188,16 @@
       "rule": "§3/§8",
       "name": "证据与文档中无明文口令、密钥与令牌",
       "status": "PASS",
-      "evidence": "全量扫描 evidence/ 与 docs/ 未命中（未使用白名单或例外目录）",
+      "evidence": "全量扫描 evidence/ 与 docs/ 未命中（无白名单、无例外目录；已知凭据值比对 1 项 + 8 类形态正则）",
+      "verify": "无需复验，结论已由证据支撑"
+    },
+    {
+      "id": "C-14",
+      "category": "共同要求",
+      "rule": "§5/§8",
+      "name": "演示凭据明文只存在于 cmd/server/main.go",
+      "status": "PASS",
+      "evidence": "仓库全量扫描未在 cmd/server/main.go 之外发现已知演示凭据明文（1 项已知值；扫描范围与版本库收录范围一致，按 .gitignore 排除构建产物）",
       "verify": "无需复验，结论已由证据支撑"
     },
     {

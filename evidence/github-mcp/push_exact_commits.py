@@ -266,7 +266,7 @@ def main() -> int:
         report["ref_action"] = "updated(force)" if args.force else "updated"
     except RuntimeError as exc:
         if "422" in str(exc) or "409" in str(exc):
-            gh.request("POST", ref_path, {"ref": f"refs/heads/{args.branch}", "sha": remote_tip})
+            gh.request("POST", f"{base}/git/refs", {"ref": f"refs/heads/{args.branch}", "sha": remote_tip})
             report["ref_action"] = "created"
         else:
             raise

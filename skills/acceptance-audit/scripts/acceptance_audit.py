@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import datetime
+import fnmatch
 import json
 import pathlib
 import re
@@ -24,10 +25,27 @@ import sys
 SECRET_PATTERNS = [
     (re.compile(r"ghp_[A-Za-z0-9]{20,}"), "GitHub PAT"),
     (re.compile(r"ghu_[A-Za-z0-9]{20,}"), "GitHub OAuth 令牌"),
+    (re.compile(r"github_pat_[A-Za-z0-9_]{20,}"), "GitHub 细粒度 PAT"),
     (re.compile(r"(?i)(?:password|passwd|口令)\s*[:=]\s*[\"']?(?!\*)[A-Za-z0-9!@#$%^&*_\-]{6,}"), "明文口令"),
     (re.compile(r"(?i)Authorization:\s*Bearer\s+[A-Za-z0-9\-_.=]{16,}"), "Bearer 令牌"),
     (re.compile(r"(?i)(?:api[_-]?key|secret)\s*[:=]\s*[\"']?[A-Za-z0-9\-_]{12,}"), "密钥"),
+    (re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"), "私钥"),
+    (re.compile(r"(?i)(?:cookie|set-cookie)\s*[:=]\s*[\"']?(?!\*)[A-Za-z0-9\-_]{16,}"), "Cookie 值"),
 ]
+
+# 已知凭据值的唯一来源：cmd/server/main.go
+# （AGENTS.md §5 第 4 条「演示口令的完整值只保留在 cmd/server/main.go，文档与证据中一律以掩码展示」）
+#
+# D-06 教训：只靠书写格式（口令[:=] 之类）的正则会漏检「口令统一为 `xxx`」这种写法，
+# 于是 C-11 假 PASS。因此改为「已知值检测 + 形态检测」双保险：
+#   * 已知值检测：运行时从 cmd/server/main.go 读取真实凭据常量值，再逐文件比对；
+#   * 形态检测：保留上表的形态类正则，兼顾不在本仓库出现的第三方令牌。
+#
+# 本 Skill 文件里**不写死任何明文凭据值**（否则会被自己的扫描规则命中）：
+# 明文值只在运行时从上面的唯一来源读取，且命中信息里一律以掩码展示。
+CREDENTIAL_SOURCE = "cmd/server/main.go"
+CREDENTIAL_CONST_RE = re.compile(r'(?m)^\s*(?:const\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*"([^"\n]{6,})"')
+CREDENTIAL_NAME_HINT = re.compile(r"(?i)(password|passwd|pwd|secret|token|api[_-]?key)")
 
 
 class Checker:
@@ -48,11 +66,33 @@ class Checker:
         self.add(cid, category, rule, name, "待补证", evidence, verify)
 
 
+def decode_text(raw: bytes) -> str:
+    """按 BOM 与常见编码解码文本。
+
+    Windows 上生成的日志/导出件常见 UTF-16LE（带 BOM）；
+    若一律按 UTF-8 读取会变成乱码，出现「证据里其实写着通过/失败 0 项」却被误判的**假结论**。
+    """
+    if raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff"):
+        return raw.decode("utf-16", errors="replace")
+    if raw.startswith(b"\xef\xbb\xbf"):
+        return raw.decode("utf-8-sig", errors="replace")
+    for encoding in ("utf-8", "gb18030"):
+        try:
+            return raw.decode(encoding)
+        except UnicodeDecodeError:
+            continue
+    return raw.decode("utf-8", errors="replace")
+
+
 def read(repo: pathlib.Path, rel: str) -> str:
     path = repo / rel
     if not path.exists():
         return ""
-    return path.read_text(encoding="utf-8", errors="replace")
+    try:
+        raw = path.read_bytes()
+    except OSError:
+        return ""
+    return decode_text(raw)
 
 
 def line_of(text: str, needle: str) -> str:
@@ -60,6 +100,90 @@ def line_of(text: str, needle: str) -> str:
         if needle in line:
             return f"{index}: {line.strip()}"
     return ""
+
+
+def mask_value(value: str) -> str:
+    """凭据值掩码：报告中只留首尾各若干位，绝不落明文。"""
+    if len(value) <= 4:
+        return "*" * len(value)
+    return value[:3] + "*" * (len(value) - 4) + value[-1:]
+
+
+def known_credentials(repo: pathlib.Path) -> list[tuple[str, str]]:
+    """读取真实演示凭据值（运行时从唯一来源读取，脚本内不写死明文）。"""
+    text = read(repo, CREDENTIAL_SOURCE)
+    found: list[tuple[str, str]] = []
+    for match in CREDENTIAL_CONST_RE.finditer(text):
+        name, value = match.group(1), match.group(2)
+        if CREDENTIAL_NAME_HINT.search(name) and not set(value) <= {"*"}:
+            found.append((name, value))
+    return found
+
+
+def iter_text_files(base: pathlib.Path):
+    """遍历目录下的文本文件；二进制文件（SQLite 库、可执行文件）按内容里的 NUL 字节跳过，
+    不是按路径做白名单。"""
+    for path in sorted(base.rglob("*")):
+        if not path.is_file():
+            continue
+        try:
+            raw = path.read_bytes()
+        except OSError:
+            continue
+        if b"\x00" in raw and not (raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff")):
+            continue  # 二进制文件（SQLite 库、可执行文件）：按内容判定，不是按路径做白名单
+        yield path, decode_text(raw)
+
+
+def gitignore_patterns(repo: pathlib.Path) -> list[str]:
+    path = repo / ".gitignore"
+    if not path.exists():
+        return []
+    return [line.strip() for line in path.read_text(encoding="utf-8", errors="replace").splitlines()
+            if line.strip() and not line.strip().startswith("#")]
+
+
+def is_ignored(rel_posix: str, patterns: list[str]) -> bool:
+    """按 .gitignore 判断文件是否属于「不属于版本库收录范围」的构建产物/本地数据。
+
+    注意：这里排除的是 **仓库收录范围**（与 `git status` 一致），
+    **不是**按敏感类型做白名单 —— 任何源码、文档、证据目录都不会被跳过。
+    """
+    parts = rel_posix.split("/")
+    for raw in patterns:
+        pattern = raw
+        if pattern.startswith("!"):
+            continue  # 本仓库未使用否定规则
+        if pattern.endswith("/"):
+            pattern = pattern[:-1]
+        if not pattern:
+            continue
+        if "/" in pattern:
+            if fnmatch.fnmatchcase(rel_posix, pattern):
+                return True
+        elif any(fnmatch.fnmatchcase(part, pattern) for part in parts):
+            return True
+    return False
+
+
+def scan_secrets(repo: pathlib.Path, roots: list[str]) -> list[str]:
+    """全量扫描指定目录（无白名单、无例外目录），「已知凭据值 + 敏感形态」双保险判定命中。"""
+    hits: list[str] = []
+    creds = known_credentials(repo)
+    for root in roots:
+        base = repo / root
+        if not base.exists():
+            continue
+        for path, content in iter_text_files(base):
+            rel = path.relative_to(repo)
+            for number, line in enumerate(content.splitlines(), start=1):
+                for name, value in creds:
+                    if value in line:
+                        hits.append(f"{rel}:{number}（已知演示凭据 {name} 明文，值 {mask_value(value)}）")
+                for pattern, label in SECRET_PATTERNS:
+                    if pattern.search(line):
+                        hits.append(f"{rel}:{number}（{label}）")
+    return hits
 
 
 def run(cmd: list[str], cwd: pathlib.Path) -> tuple[int, str]:
@@ -324,24 +448,42 @@ def check_common_requirements(ck: Checker, repo: pathlib.Path, min_cov: float, s
         ck.pending("C-10", "共同要求", "§9", "提交消息符合 [类型] [版本号] [编号] 描述 格式",
                    "当前目录不是 Git 仓库", "在仓库根目录重新执行本 Skill")
 
-    # 泄密扫描（无白名单、无例外目录）
-    hits = []
-    for path in list((repo / "evidence").rglob("*")) + list((repo / "docs").rglob("*")):
-        if not path.is_file():
-            continue
-        try:
-            content = path.read_text(encoding="utf-8", errors="replace")
-        except OSError:
-            continue
-        for pattern, label in SECRET_PATTERNS:
-            if pattern.search(content):
-                hits.append(f"{path.relative_to(repo)}（{label}）")
+    # 泄密扫描（无白名单、无例外目录）：已知凭据值检测 + 敏感形态检测
+    hits = scan_secrets(repo, ["evidence", "docs"])
+    creds = known_credentials(repo)
     if hits:
         ck.fail("C-11", "共同要求", "§3/§8", "证据与文档中无明文口令、密钥与令牌",
-                f"命中：{hits[:5]}", "把凭据改为掩码或移到仓库外的凭据文件")
+                f"命中 {len(hits)} 处：{hits[:8]}",
+                "把凭据改为掩码或移到仓库外的凭据文件")
     else:
         ck.ok("C-11", "共同要求", "§3/§8", "证据与文档中无明文口令、密钥与令牌",
-              "全量扫描 evidence/ 与 docs/ 未命中（未使用白名单或例外目录）")
+              f"全量扫描 evidence/ 与 docs/ 未命中（无白名单、无例外目录；"
+              f"已知凭据值比对 {len(creds)} 项 + {len(SECRET_PATTERNS)} 类形态正则）")
+
+    # 已知演示凭据的明文只允许存在于 cmd/server/main.go（AGENTS.md §5 第 4 条）
+    # 这一项对仓库全量扫描（同样不做路径白名单；只排除二进制文件），与 C-11 的文档/证据范围互补。
+    outside = []
+    ignore_patterns = gitignore_patterns(repo)
+    for path, content in iter_text_files(repo):
+        rel = path.relative_to(repo)
+        rel_posix = rel.as_posix()
+        if rel_posix == CREDENTIAL_SOURCE:
+            continue
+        if rel.parts and rel.parts[0] == ".git":
+            continue  # 版本库内部对象目录，不是工作区交付内容
+        if is_ignored(rel_posix, ignore_patterns):
+            continue  # 构建产物/本地数据，不在版本库收录范围内
+        for name, value in creds:
+            if value in content:
+                outside.append(f"{rel}（{name}，值 {mask_value(value)}）")
+    if outside:
+        ck.fail("C-14", "共同要求", "§5/§8", "演示凭据明文只存在于 cmd/server/main.go",
+                f"以下 {len(outside)} 处仍含已知演示凭据明文：{outside[:8]}",
+                "改为从 cmd/server/main.go 读取该常量或改用掩码展示（不得新增例外目录）")
+    else:
+        ck.ok("C-14", "共同要求", "§5/§8", "演示凭据明文只存在于 cmd/server/main.go",
+              f"仓库全量扫描未在 {CREDENTIAL_SOURCE} 之外发现已知演示凭据明文"
+              f"（{len(creds)} 项已知值；扫描范围与版本库收录范围一致，按 .gitignore 排除构建产物）")
 
     # 部署与冒烟
     deployment = read(repo, "evidence/deployment-main.log")

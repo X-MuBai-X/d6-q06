@@ -1,0 +1,56 @@
+﻿=== 平台启动参数：默认时钟（未传 -clock-scale，即倍率 1 = 题面 60 秒口径） ===
+=== 场景脚本输出 ===
+预置账号口令来源：脚本内置测试专用口令
+
+=== S1 正常交付 ===
+[PASS] S1 生成任务已受理 task=task-07dafbb5306a72787ab22269
+[PASS] S1 收到回调并生成候选 status=candidate_pending
+[PASS] S1 当前候选存在 
+[PASS] S1 描述快照已保存 
+[PASS] S1 复核通过后进入待确认 
+[PASS] S1 确认采用后交付完成 
+[PASS] S1 运营可查到完成记录 delivered=1
+
+=== S2 业务重做 ===
+[PASS] S2 复核不通过需写原因且状态为待重做 
+[PASS] S2 第二次生成后旧候选变为历史 
+[PASS] S2 历史描述快照未被覆盖 
+[PASS] S2 旧版本不能被误复核 status=409
+[PASS] S2 旧版本不能被误确认采用 status=409
+[PASS] S2 新版本确认采用后交付完成 
+
+=== S3 技术失败 ===
+[PASS] S3 供应商拒绝时发起被拒并返回明确原因 status=409
+[PASS] S3 拒绝后需求状态为失败可重试 
+[PASS] S3 拒绝原因可追溯 模拟供应商本次拒绝受理
+[PASS] S3 拒绝未产生候选 
+[PASS] S3 失败回调不产生候选 
+[PASS] S3 失败原因已留痕 
+[PASS] S3 第三次未成功后达到次数上限 status=exhausted
+[PASS] S3 三次历史均可追溯 
+[PASS] S3 第四次发起被拒绝 status=409
+
+=== S4 中途撤销 ===
+[PASS] S4 撤销后需求保持撤销 
+[PASS] S4 迟到成功后需求仍为撤销 
+[PASS] S4 迟到结果未形成候选 
+[PASS] S4 迟到结果保留审计 events=['requirement_created', 'generation_started', 'callback_accepted', 'requirement_withdrawn', 'late_result_ignored']
+[PASS] S4 运营异常查询可见迟到结果 
+
+=== S5 并发与权限 ===
+[PASS] S5 同请求编号重复发起返回同一任务 
+[PASS] S5 同请求编号只创建一个生成任务 tasks=1
+[PASS] S5 已有处理中任务时再次发起被拒 status=409
+[PASS] S5 需求人访问他人需求被拒 status=403
+[PASS] S5 需求人对他人需求发起生成被拒 status=403
+[PASS] S5 运营无权代替需求人确认采用 status=403
+[PASS] S5 复核人无权发起生成 status=403
+[PASS] S5 重复复核得到明确拒绝结果 status=409
+[PASS] S5 撤销后仍可查到审计 
+
+通过 36 项，失败 0 项
+=== 用时（秒）：67.1 ===
+=== 脚本退出码：0 ===
+
+=== 平台启动日志（默认时钟实测：未传 -clock-scale） ===
+2026/11/13 22:38:32 服务已启动，教学时钟倍率=1（超时上限 1m0s）

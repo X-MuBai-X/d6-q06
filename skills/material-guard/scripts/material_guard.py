@@ -22,6 +22,27 @@ import subprocess
 import sys
 
 
+def decode_text(raw: bytes) -> str:
+    """按 BOM 与常见编码解码文本（Windows 日志常见 UTF-16LE，避免读成乱码导致假结论）。"""
+    if raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff"):
+        return raw.decode("utf-16", errors="replace")
+    if raw.startswith(b"\xef\xbb\xbf"):
+        return raw.decode("utf-8-sig", errors="replace")
+    for encoding in ("utf-8", "gb18030"):
+        try:
+            return raw.decode(encoding)
+        except UnicodeDecodeError:
+            continue
+    return raw.decode("utf-8", errors="replace")
+
+
+def read_text(path: pathlib.Path) -> str:
+    try:
+        return decode_text(path.read_bytes())
+    except OSError:
+        return ""
+
+
 def open_db(path: pathlib.Path) -> sqlite3.Connection:
     conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
     conn.row_factory = sqlite3.Row
@@ -29,7 +50,7 @@ def open_db(path: pathlib.Path) -> sqlite3.Connection:
 
 
 def check_db(conn: sqlite3.Connection) -> list[dict]:
-    """执行 G1–G8 数据库不变量检查。"""
+    """执行 G1–G9 数据库不变量检查。"""
     results: list[dict] = []
 
     def add(cid: str, rule: str, name: str, ok: bool | None, evidence: str) -> None:
@@ -116,6 +137,31 @@ def check_db(conn: sqlite3.Connection) -> list[dict]:
     add("G8", "R8", "需求与生成任务均有审计留痕", not no_created and not no_event,
         "缺创建事件的需求：%s；缺事件的任务：%s" %
         ([r["id"] for r in no_created], [r["id"] for r in no_event]))
+
+    # G9：撤销后不得复活（D-07 根因：G1–G8 只看候选/采用记录，不看状态与事件）
+    # (a) 已撤销（存在 requirement_withdrawn 事件）的需求，状态不得被改写为
+    #     generating / failed / exhausted；
+    # (b) 撤销事件之后不得再出现把需求往前推的事件（发起生成、超时/失败/拒绝回调、
+    #     产出候选、复核、采用）。
+    revived = conn.execute(
+        "SELECT r.id, r.status FROM requirements r WHERE r.status IN ('generating','failed','exhausted') "
+        "AND EXISTS (SELECT 1 FROM events w WHERE w.requirement_id = r.id AND w.kind = 'requirement_withdrawn')"
+    ).fetchall()
+    forward_kinds = ("generation_started", "generation_timeout", "generation_failed",
+                     "generation_rejected", "candidate_created", "candidate_reviewed",
+                     "requirement_adopted")
+    placeholders = ",".join("?" for _ in forward_kinds)
+    pushed = conn.execute(
+        "SELECT r.id, e.kind, e.id FROM requirements r "
+        "JOIN events e ON e.requirement_id = r.id "
+        "WHERE e.kind IN (%s) AND EXISTS ("
+        "  SELECT 1 FROM events w WHERE w.requirement_id = r.id AND w.kind = 'requirement_withdrawn' "
+        "  AND w.id < e.id)" % placeholders, forward_kinds).fetchall()
+    add("G9", "R7", "撤销的需求不得复活（状态不得被改写，撤销后不得再出现推进事件）",
+        not revived and not pushed,
+        "撤销后状态被改写的需求：%s；撤销后仍出现推进事件：%s" %
+        ([f"{r['id']}→{r['status']}" for r in revived],
+         [f"{r['id']}:{r['kind']}" for r in pushed]))
     return results
 
 
@@ -128,7 +174,7 @@ def check_source(repo: pathlib.Path) -> list[dict]:
                             status="PASS" if ok else "FAIL", evidence=evidence))
 
     rules = (repo / "internal" / "domain" / "rules.go")
-    source = rules.read_text(encoding="utf-8") if rules.exists() else ""
+    source = read_text(rules) if rules.exists() else ""
     max_attempts = re.search(r"MaxAttempts\s*=\s*(\d+)", source)
     timeout = re.search(r"GenerationTimeout\s*=\s*(\d+)\s*\*\s*time\.Second", source)
     add("S1", "最大生成次数为 3", bool(max_attempts) and max_attempts.group(1) == "3",
@@ -147,6 +193,38 @@ def check_source(repo: pathlib.Path) -> list[dict]:
         missing = [s for s in expected if s not in body]
         add(f"S3-{func}", f"{func} 的允许状态集合符合题面", not missing and bool(match),
             f"internal/domain/rules.go {func}：缺少 {missing if missing else '无'}")
+
+    # S3 增补（D-07 根因之一）：只核对 domain/rules.go 里的**声明**不够，
+    # 还要确认业务层真的**调用**了 CanStartGeneration，否则撤销过的需求仍可被复活（D-01）。
+    # 判据基于语义（是否存在调用点），不依赖具体行号。
+    service_dir = repo / "internal" / "service"
+    call_sites: list[str] = []
+    service_text: dict[str, str] = {}
+    if service_dir.exists():
+        for path in sorted(service_dir.glob("*.go")):
+            if path.name.endswith("_test.go"):
+                continue  # 测试文件不算业务实现
+            text = read_text(path)
+            service_text[path.name] = text
+            for number, line in enumerate(text.splitlines(), start=1):
+                if re.search(r"(?<!func\s)\bCanStartGeneration\s*\(", line):
+                    call_sites.append(f"internal/service/{path.name}:{number}")
+    add("S3-CallCanStartGeneration", "业务层存在 CanStartGeneration 的调用点（不只看声明）",
+        bool(call_sites),
+        "调用点：%s" % (call_sites if call_sites else "未发现（internal/service 下无任何 CanStartGeneration 调用）"))
+
+    # 进一步对准 R7/D-01：发起生成的事务体内必须调用该判定，
+    # 否则「撤销后再次发起」不会被拦下。
+    start_gen = service_text.get("requirement.go", "")
+    body = ""
+    match = re.search(r"func \(s \*Service\) StartGeneration\(.*?\n\}\n", start_gen, re.S)
+    if match:
+        body = match.group(0)
+    in_body = bool(re.search(r"(?<!func\s)\bCanStartGeneration\s*\(", body))
+    add("S3-CallInStartGeneration", "StartGeneration 内调用 CanStartGeneration（撤销后不得再发起）",
+        in_body,
+        "internal/service/requirement.go 的 StartGeneration：%s" %
+        ("已调用 CanStartGeneration" if in_body else "未发现 CanStartGeneration 调用（撤销后仍可被复活）"))
     return results
 
 
@@ -159,7 +237,7 @@ def run_coverage(repo: pathlib.Path, min_cov: float) -> tuple[str, str]:
                            "--out-dir", "evidence", "--min", str(min_cov)],
                           capture_output=True, text=True, encoding="utf-8", errors="replace")
     summary = (repo / "evidence" / "coverage-summary.txt")
-    detail = summary.read_text(encoding="utf-8") if summary.exists() else (proc.stdout or "")
+    detail = read_text(summary) if summary.exists() else (proc.stdout or "")
     return ("PASS" if proc.returncode == 0 else "FAIL"), detail
 
 
@@ -201,7 +279,14 @@ def main() -> int:
     payload["coverage"] = {"status": cov_status, "report": cov_detail}
 
     failures = [c for c in payload["checks"] if c["status"] == "FAIL"]
-    overall = "FAIL" if failures or cov_status == "FAIL" else "PASS"
+    # 覆盖率门禁未执行（待补证）时，整体判定不得是 PASS：
+    # 「没做」与「做不了」必须分开陈述（AGENTS.md §8 第 2 条）。
+    if failures or cov_status == "FAIL":
+        overall = "FAIL"
+    elif cov_status == "待补证":
+        overall = "待补证"
+    else:
+        overall = "PASS"
     payload["status"] = overall
 
     lines += [f"- 判定：**{overall}**", f"- 数据库：`{db_path}`", f"- 覆盖率门禁：{cov_status}", ""]
@@ -218,12 +303,18 @@ def main() -> int:
             lines.append(f"- **{item['id']}（{item['rule']}）**：{item['name']} —— {item['evidence']}")
     else:
         lines.append("- 无失败项。")
+    if overall == "待补证":
+        lines.append(f"- **整体判定为「待补证」**：覆盖率门禁状态为「{cov_status}」，"
+                     "覆盖率是本 Skill 的判定项之一，未执行时不得判为 PASS；"
+                     "请在具备 Go 工具链的环境重跑（去掉 --skip-tests）。")
     lines.append("")
 
     out_path.write_text("\n".join(lines), encoding="utf-8")
     out_path.with_suffix(".json").write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     print("\n".join(lines))
-    return 0 if overall == "PASS" else 1
+    if overall == "PASS":
+        return 0
+    return 1 if overall == "FAIL" else 2
 
 
 if __name__ == "__main__":
