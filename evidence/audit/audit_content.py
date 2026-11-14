@@ -8,6 +8,28 @@
 """
 
 # ---------------------------------------------------------------- 产物清单
+def overall_coverage() -> str:
+    """运行时读取唯一口径脚本产出的整体覆盖率（不硬编码数值）。
+
+    仓库根由本文件位置推导（evidence/audit/audit_content.py → 上溯三级），
+    因此与当前工作目录无关；读取失败时返回明确的「未知」而不是猜测值。
+    """
+    import os
+    import pathlib
+    import re
+
+    base = pathlib.Path(os.environ.get("AUDIT_REPO") or pathlib.Path(__file__).resolve().parents[2])
+    path = base / "evidence" / "coverage-summary.txt"
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return "未知（未找到 evidence/coverage-summary.txt）"
+    m = re.search(r"整体覆盖率】\s*语句\s*([0-9.]+)%\s*块\s*([0-9.]+)%", text)
+    if not m:
+        return "未知（无法从 evidence/coverage-summary.txt 解析覆盖率）"
+    return f"语句 {m.group(1)}%（块口径 {m.group(2)}%）"
+
+
 # id -> (presence, validity, location, reason, owner, evidence, scenario, usage,
 #        quality_summary, result_impact, fix)
 ARTIFACTS = {
@@ -121,7 +143,7 @@ ARTIFACTS = {
         "无需整改。"),
     "coverage": (
         "present", "valid", "evidence/coverage.out、evidence/coverage-summary.txt",
-        f"唯一口径脚本 scripts/coverage_gate.py 产出：整体 {cov_overall_placeholder}，各核心包分别 ≥85%。",
+        f"唯一口径脚本 scripts/coverage_gate.py 产出：整体 {overall_coverage()}，各核心包分别 ≥85%。",
         "student", ["E-COV-01"],
         "统计对象为全部自编生产代码，无排除项。",
         "CI 与本机共用同一脚本与阈值。",

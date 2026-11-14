@@ -1,0 +1,4337 @@
+{
+  "schema_version": "3.0",
+  "student": "xishiyao",
+  "question": "06",
+  "revision": "dev/06@709c220（完整 SHA 709c22024dc44ddcc45648919205ffd070029188）",
+  "profile_sha256": "d5ed132417b6596c0317da0d9d95ab4ab6aba84fe18769514bbfdaa4838fd787",
+  "audit_meta": {
+    "audit_id": "D6-Q06-SELF-2026-11-14-01",
+    "auditor": "交付执行方自检（student-project-audit v3.0 官方计分器）",
+    "audit_date": "2026-11-14T09:00:00+08:00",
+    "environment": "Windows 10.0.26100 / PowerShell 5.1 / go1.27.1 windows-amd64 / Python 3.14.8；CI 侧为 ubuntu-latest + go1.27.4",
+    "tool_versions": "student-project-audit rubric 3.0；score_audit.py 与 render_report.py 取自技能内置 scripts/",
+    "rubric_published_at": "2026-11-13（本次交付取得的工具包内 references/ 随题面一并提供）",
+    "publication_evidence": "skill-usage.md、docs/09-AI使用说明.md 记录了清单与计分规则的取得方式与使用范围",
+    "profile_approved_by": "未完成：本次交付未获得教师对 profiles/06.json 的书面核准记录",
+    "profile_release_evidence": "未完成：无清单发布/核准留档，按合同登记为缺口并归责 teacher",
+    "batch": "2组-题目06",
+    "calibration_id": "未完成：本次交付未获得评分校准记录",
+    "calibration_evidence": "未完成：无校准记录，按合同登记为缺口并归责 teacher",
+    "review_policy": "发现即修正并留「发现问题→修正→复检」闭环记录；证据缺失记待补证，不以 NA 或通过代替",
+    "supplement_deadline": "补证项随每日群提交同步补充，直至教师收件",
+    "resubmission_policy": "允许在补证后重跑官方计分器并保留旧报告，不静默重算",
+    "appeal_channel": "班级群与教师评阅渠道",
+    "readiness": {
+      "rules_published": true,
+      "profile_approved": false,
+      "calibrated": false,
+      "evidence": [
+        "E-CHECKPOINT-01",
+        "E-SKILL-USE-01"
+      ]
+    },
+    "mode": "initial",
+    "disputed": false,
+    "second_review": {
+      "completed": false
+    }
+  },
+  "artifacts": [
+    {
+      "id": "requirements",
+      "presence": "present",
+      "validity": "valid",
+      "location": "docs/01-需求分析.md",
+      "reason": "题面正文与共同要求快照、R1–R8 规则编号、S1–S5 场景、假设清单 A1–A7、五方对照表齐备，落盘时刻早于第一行业务代码。",
+      "owner": "student",
+      "evidence": [
+        "E-REQ-01",
+        "E-ASSUMPTION-01"
+      ],
+      "scenario": "覆盖题目 06 的正常交付、业务重做、技术失败、中途撤销、并发与权限五组场景。",
+      "usage": "作为开发与验收的唯一规则来源，R 编号被代码注释与测试名直接引用。",
+      "quality_summary": "规则与题面逐条对应，假设清单每条含理由、影响面与确认状态，未把推测当既定需求。",
+      "result_impact": "为 A1 需求类评分项提供可回源依据。",
+      "fix": "无需整改。"
+    },
+    {
+      "id": "prototype",
+      "presence": "present",
+      "validity": "valid",
+      "location": "docs/02-原型设计.md、internal/httpapi/templates/（4 个业务页面模板）",
+      "reason": "原型为真实可操作页面本体（工作台、需求详情、复核、运营异常），另有页面状态说明文档。",
+      "owner": "student",
+      "evidence": [
+        "E-PRO-01"
+      ],
+      "scenario": "四个角色入口、结果状态与异常状态（失败、超时、撤销、越权拒绝）均有对应页面与状态展示。",
+      "usage": "页面直接承载 R1–R8 的状态可见性要求（当前候选与历史候选分开展示）。",
+      "quality_summary": "原型与实现同源，非静态截图替代。",
+      "result_impact": "为 A1-15 提供可操作原型证据。",
+      "fix": "无需整改。"
+    },
+    {
+      "id": "plan",
+      "presence": "present",
+      "validity": "valid",
+      "location": "docs/03-任务规划.md",
+      "reason": "任务拆分为实现/测试/验收/部署四组，逐项标注需求编号、依赖关系、完成条件与验收方式。",
+      "owner": "student",
+      "evidence": [
+        "E-PLAN-01"
+      ],
+      "scenario": "计划覆盖五组场景对应的实现与验证任务。",
+      "usage": "计划先于开发落盘，开发顺序受其约束。",
+      "quality_summary": "任务与 R/S 编号双向可追溯。",
+      "result_impact": "为 A1-16 提供计划证据。",
+      "fix": "无需整改。"
+    },
+    {
+      "id": "source",
+      "presence": "present",
+      "validity": "valid",
+      "location": "internal/domain、internal/store、internal/service、internal/supplier、internal/httpapi、cmd/server、cmd/mockgen",
+      "reason": "Go 1.27 纯标准库 + modernc.org/sqlite 实现，R1–R8 全部落地；gofmt 零差异、go vet 无告警、可构建并实际启动。",
+      "owner": "student",
+      "evidence": [
+        "E-SRC-01",
+        "E-SCHEMA-01"
+      ],
+      "scenario": "五组场景的接口、页面与数据库路径均可实际操作。",
+      "usage": "代码是交付主体，页面与接口均由此产生。",
+      "quality_summary": "分层清晰，参数化 SQL，无危险输入拼接。",
+      "result_impact": "支撑 A1 全部业务规则类与 A2 全部共同要求类评分项。",
+      "fix": "无需整改。"
+    },
+    {
+      "id": "runtime",
+      "presence": "present",
+      "validity": "valid",
+      "location": "docs/04-部署与使用说明.md、evidence/scenario-verify.log、cmd/mockgen",
+      "reason": "干净环境可复现：go build + 双进程启动 + 演示账号；五组场景实测通过；数据落库且重启可查询。",
+      "owner": "student",
+      "evidence": [
+        "E-SCN-01",
+        "E-SRC-01"
+      ],
+      "scenario": "五组场景脚本逐条断言全部通过。",
+      "usage": "作为演示与验收的运行入口。",
+      "quality_summary": "初始化、演示数据、模拟服务的启动顺序与参数均已写明。",
+      "result_impact": "支撑 A4-01、A4-04 与 A3-05。",
+      "fix": "无需整改。"
+    },
+    {
+      "id": "agent_rules",
+      "presence": "present",
+      "validity": "valid",
+      "location": "AGENTS.md、docs/agents/AGENTS-v1.0.md、docs/agents/AGENTS-读取记录.md",
+      "reason": "针对本题的 Agent 约束，覆盖角色范围与七阶段；版本快照 1 份；读取记录逐次登记；落盘早于第一行业务代码。",
+      "owner": "student",
+      "evidence": [
+        "E-AGENT-01"
+      ],
+      "scenario": "约束覆盖需求→原型→计划→开发→测试→验收→部署的阶段门禁。",
+      "usage": "开发与修复全过程实际读取并遵循该约束。",
+      "quality_summary": "含禁止编造、禁止弱化断言凑覆盖率、禁止泄密三条明确约束。",
+      "result_impact": "支撑 B2-01、B2-02 与 B1 阶段顺序类评分项。",
+      "fix": "无需整改。"
+    },
+    {
+      "id": "business_skill",
+      "presence": "present",
+      "validity": "valid",
+      "location": "skills/material-guard/（SKILL.md + scripts/material_guard.py）",
+      "reason": "自编业务专项 Skill：七要素齐全，判定逻辑在脚本中（G1–G9 数据库不变量 + 源码一致性），已真实调用并留原始输出。",
+      "owner": "student",
+      "evidence": [
+        "E-SKILL-B-01",
+        "E-SKILL-B-02"
+      ],
+      "scenario": "对题目 06 的业务不变量（幂等、候选唯一、撤销不复活、历史不可复核）做机器判定。",
+      "usage": "开发期与修复期反复调用，用于发现问题→修正→复检闭环。",
+      "quality_summary": "含至少一次真实「FAIL → 修判据 → PASS」闭环记录。",
+      "result_impact": "支撑 B3-01 与 A1 业务规则类评分项的交叉验证。",
+      "fix": "无需整改。"
+    },
+    {
+      "id": "acceptance_skill",
+      "presence": "present",
+      "validity": "valid",
+      "location": "skills/acceptance-audit/（SKILL.md + scripts/acceptance_audit.py）",
+      "reason": "自编验收 Skill：依据原题逐条核验 R1–R8 与共同要求 13 项，判定逻辑在脚本中，已真实调用并留原始输出。",
+      "owner": "student",
+      "evidence": [
+        "E-SKILL-A-01",
+        "E-SKILL-A-02"
+      ],
+      "scenario": "对规则、场景、覆盖率、泄密、提交规范、部署证据做独立机器判定。",
+      "usage": "交付前逐轮复检，输出逐项明细与 JSON 结果。",
+      "quality_summary": "R4-01 判据修正前后各有一轮真实输出，形成闭环。",
+      "result_impact": "支撑 B3-02 与 A3-07、B1-04。",
+      "fix": "无需整改。"
+    },
+    {
+      "id": "skill_usage",
+      "presence": "present",
+      "validity": "valid",
+      "location": "skill-usage.md、docs/08-Skill使用记录.md",
+      "reason": "两个自编 Skill 的六项说明（用途、触发场景、输入、执行步骤、输出、失败处理/完成标准、实际帮助、局限）齐全。",
+      "owner": "student",
+      "evidence": [
+        "E-SKILL-USE-01"
+      ],
+      "scenario": "说明与本题实例一一对应。",
+      "usage": "帮助与局限均引用真实调用输出。",
+      "quality_summary": "未出现空话或编造数据。",
+      "result_impact": "支撑 B3-03。",
+      "fix": "无需整改。"
+    },
+    {
+      "id": "prompts",
+      "presence": "present",
+      "validity": "valid",
+      "location": "docs/06-会话导出.md、evidence/会话事件清单.jsonl",
+      "reason": "全过程可见提示词、回复摘要、工具结果与结构化事件清单（含失败与重试）已归档。",
+      "owner": "student",
+      "evidence": [
+        "E-PROMPT-01"
+      ],
+      "scenario": "每个任务与分支均能从提示追到实现与验证。",
+      "usage": "作为审计溯源底账。",
+      "quality_summary": "事件清单 36+ 条，含工具失败记录。",
+      "result_impact": "支撑 B2-03、B2-04、B2-05。",
+      "fix": "无需整改。"
+    },
+    {
+      "id": "ai_summary",
+      "presence": "present",
+      "validity": "valid",
+      "location": "docs/09-AI使用说明.md、evidence/defect-fix-round1*.md",
+      "reason": "AI 与学生分工、逐条审核纠错记录写明；独立测试 Agent 检出 9 条缺陷并全部登记修复与复检。",
+      "owner": "student",
+      "evidence": [
+        "E-AI-01",
+        "E-DEFIX-01"
+      ],
+      "scenario": "覆盖需求、实现、测试、验收、交付全链路的 AI 使用边界。",
+      "usage": "用于说明哪些结论由 AI 产出、哪些经人工复核。",
+      "quality_summary": "含「未弱化测试、未使用白名单」的实证（缺陷修复前后覆盖率与测试数对照）。",
+      "result_impact": "支撑 B2-06 与 A3-08。",
+      "fix": "无需整改。"
+    },
+    {
+      "id": "unit_tests",
+      "presence": "present",
+      "validity": "valid",
+      "location": "internal/**/*_test.go、cmd/**/*_test.go、evidence/go-test-output.txt",
+      "reason": "单元测试含真实业务断言与负向边界（含独立测试检出缺陷对应的回归用例）；go test ./... -count=1 全绿。",
+      "owner": "student",
+      "evidence": [
+        "E-TEST-01",
+        "E-DEFIX-01"
+      ],
+      "scenario": "覆盖正常、边界、非法状态、重复操作、权限与异常路径。",
+      "usage": "门禁与 CI 均以本套测试为准。",
+      "quality_summary": "含撤销后发起、巡检复活、跨需求幂等等缺陷回归用例。",
+      "result_impact": "支撑 A3-01、A3-08。",
+      "fix": "无需整改。"
+    },
+    {
+      "id": "coverage",
+      "presence": "present",
+      "validity": "valid",
+      "location": "evidence/coverage.out、evidence/coverage-summary.txt",
+      "reason": "唯一口径脚本 scripts/coverage_gate.py 产出：整体 语句 95.16%（块口径 96.00%），各核心包分别 ≥85%。",
+      "owner": "student",
+      "evidence": [
+        "E-COV-01"
+      ],
+      "scenario": "统计对象为全部自编生产代码，无排除项。",
+      "usage": "CI 与本机共用同一脚本与阈值。",
+      "quality_summary": "报告绑定最终提交，剖面为绝对路径重生成。",
+      "result_impact": "支撑 A3-02、A3-03、A3-04。",
+      "fix": "无需整改。"
+    },
+    {
+      "id": "integration",
+      "presence": "present",
+      "validity": "valid",
+      "location": "scripts/verify_scenarios.py、evidence/scenario-verify.log、evidence/go-test-output.txt",
+      "reason": "接口与持久化验证真实执行：五组场景脚本逐条断言；重启后数据仍可查询；并发与重复操作有可重复验证。",
+      "owner": "student",
+      "evidence": [
+        "E-SCN-01"
+      ],
+      "scenario": "S1–S5 覆盖正常交付、业务重做、技术失败、中途撤销、并发与权限。",
+      "usage": "既是演示脚本也是回归门禁。",
+      "quality_summary": "含幂等、越权 403、重复复核 409 等负向断言。",
+      "result_impact": "支撑 A3-05、A3-06。",
+      "fix": "无需整改。"
+    },
+    {
+      "id": "test_agent",
+      "presence": "present",
+      "validity": "valid",
+      "location": "evidence/independent-test-report.md",
+      "reason": "独立测试 Agent 在全新上下文读取原题与对应代码后实测，登记 9 条缺陷（含 2 条严重）并给出复现输出。",
+      "owner": "student",
+      "evidence": [
+        "E-TESTAGENT-01"
+      ],
+      "scenario": "覆盖正常/边界/非法状态/重复操作/权限/异常路径，含撤销复活与跨需求幂等等题面边界。",
+      "usage": "独立测试结论直接驱动了本轮缺陷修复。",
+      "quality_summary": "报告含环境边界披露与未覆盖范围说明。",
+      "result_impact": "支撑 A3-07、A3-08。",
+      "fix": "无需整改。"
+    },
+    {
+      "id": "accept_agent",
+      "presence": "present",
+      "validity": "valid",
+      "location": "evidence/independent-acceptance-report.md",
+      "reason": "独立验收 Agent 在全新上下文依据原题逐项核验六维度结论，每项带文件与日志位置。",
+      "owner": "student",
+      "evidence": [
+        "E-ACCEPTAGENT-01"
+      ],
+      "scenario": "按题面规则与场景逐项验收，不采信开发会话的完成声明。",
+      "usage": "验收结论用于决定是否合并与部署。",
+      "quality_summary": "含证据位置与结论一一对应。",
+      "result_impact": "支撑 B1-04。",
+      "fix": "无需整改。"
+    },
+    {
+      "id": "git",
+      "presence": "present",
+      "validity": "valid",
+      "location": "evidence/github-mcp/（建仓报文、推送映射、分支保护、直推受拒、PR 与合并报文）",
+      "reason": "仓库由 GitHub MCP create_repository 创建；业务提交全部落在 dev/06；main 受保护且直推被实测拒绝（409）；PR 经检查后合并。",
+      "owner": "student",
+      "evidence": [
+        "E-GIT-01",
+        "E-GIT-02",
+        "E-GIT-03",
+        "E-GIT-04"
+      ],
+      "scenario": "覆盖建仓、分支、提交、PR、合并与保护全流程。",
+      "usage": "提交消息格式统一；工作项编号因本机无 meegle CLI 未核验，已登记为待补证偏差。",
+      "quality_summary": "本地与远端 tree SHA 逐条相同，可核对内容一致性。",
+      "result_impact": "支撑 B4-01 至 B4-05。",
+      "fix": "工作项编号待补证（见 limitations）。"
+    },
+    {
+      "id": "pipeline",
+      "presence": "present",
+      "validity": "valid",
+      "location": ".github/workflows/ci.yml、evidence/github-mcp/workflow-runs.json",
+      "reason": "流水线含质量检查、单测与竞态检测、覆盖率门禁、构建、部署、健康检查与业务冒烟；实际运行记录已归档。",
+      "owner": "student",
+      "evidence": [
+        "E-PIPE-01",
+        "E-PIPE-02"
+      ],
+      "scenario": "在 PR 与主分支均触发。",
+      "usage": "合并前以状态检查作为门禁。",
+      "quality_summary": "覆盖率口径与本机共用同一脚本。",
+      "result_impact": "支撑 A4-05。",
+      "fix": "无需整改。"
+    },
+    {
+      "id": "deployment",
+      "presence": "present",
+      "validity": "valid",
+      "location": "evidence/deployment-main.log、scripts/deploy.sh、Dockerfile",
+      "reason": "以合并提交为版本执行部署脚本，完成构建、健康检查与五组场景冒烟；日志含版本 SHA 与回退方法。",
+      "owner": "student",
+      "evidence": [
+        "E-DEPLOY-01"
+      ],
+      "scenario": "部署后业务冒烟覆盖五组场景。",
+      "usage": "部署版本与主分支制品对应。",
+      "quality_summary": "首次部署失败的撤销方式与上一可用版本恢复方式均写明。",
+      "result_impact": "支撑 A4-06、A4-07。",
+      "fix": "无需整改。"
+    },
+    {
+      "id": "video",
+      "presence": "unknown",
+      "validity": "unknown",
+      "location": "docs/12-讲解视频带时间点目录.md（目录与要点已产出）",
+      "reason": "讲解视频本体与配音属人工交付物，必须由学生本人录制；本次仅产出带时间点的逐段目录、应展示画面与讲解要点，文件与链接待回填。",
+      "owner": "student",
+      "evidence": [
+        "E-VIDEO-01"
+      ],
+      "scenario": "目录逐段对应五组场景与关键异常，并标注证据位置。",
+      "usage": "作为录制脚本使用，不替代视频本体。",
+      "quality_summary": "内容可回源到具体文件与日志。",
+      "result_impact": "A4-08、A4-09 因视频本体缺失记 unknown / 待补证。",
+      "fix": "学生本人录制并回填可访问链接后复验。"
+    },
+    {
+      "id": "group",
+      "presence": "unknown",
+      "validity": "unknown",
+      "location": "docs/11-班级群提交消息.md（消息全文模板已产出）",
+      "reason": "班级群提交须由学生本人在当日群内实际发送；本次仅产出含姓名、日期、题号题名、仓库地址、PR 与发布版本、部署地址、报告索引与双视频链接位的消息全文模板。",
+      "owner": "student",
+      "evidence": [
+        "E-GROUP-01"
+      ],
+      "scenario": "消息字段与共同要求 §10 的必填项逐项对应。",
+      "usage": "发送前需先完成视频与部署等前置回填。",
+      "quality_summary": "模板内不含任何明文密钥。",
+      "result_impact": "A4-10 记 unknown / 待补证。",
+      "fix": "学生本人在当日群内发送并回填发送凭据。"
+    },
+    {
+      "id": "tokens",
+      "presence": "present",
+      "validity": "valid",
+      "location": "evidence/token-ledger.json、evidence/build_token_ledger.py",
+      "reason": "全阶段逐请求 Token 台账（来源：会话归档中供应商 usage 字段，按 provider+request_id 去重），含阶段与模型小计。",
+      "owner": "student",
+      "evidence": [
+        "E-TOKEN-01"
+      ],
+      "scenario": "覆盖需求准备到交付全过程，含子 Agent 会话。",
+      "usage": "用于 Token 用量核查与效率对照。",
+      "quality_summary": "教师基准 B 尚未发布，故不做消耗比与额外浪费扣分计算（缺口已登记）。",
+      "result_impact": "Token 相关评分项按「总量已知、基准缺失」记 unknown / 待补证，责任方 teacher。",
+      "fix": "待教师发布同题同范围基准后复算。"
+    },
+    {
+      "id": "checkpoints",
+      "presence": "present",
+      "validity": "valid",
+      "location": "docs/13-阶段检查点与版本索引.md",
+      "reason": "七阶段检查点、进入条件、产物版本、原始事件与交接记录齐全，需求→原型→计划→开发的先后可核。",
+      "owner": "student",
+      "evidence": [
+        "E-CHECKPOINT-01"
+      ],
+      "scenario": "覆盖七阶段与返工节点。",
+      "usage": "作为审计的阶段顺序底账。",
+      "quality_summary": "每阶段标注对应提交与产物路径。",
+      "result_impact": "支撑 B1-01、B1-02、B1-03。",
+      "fix": "无需整改。"
+    }
+  ],
+  "checks": [
+    {
+      "id": "06-A1-01",
+      "category": "A1",
+      "title": "需求包含活动名称、用途和图片描述；需求人确认后发起生成。每次生成须保存当时描述，历史记录不能被后续修改覆盖。",
+      "source": "assignment.md:440",
+      "kind": "business_rule",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "source"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.16",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "实现与断言逐条对应，描述快照为落库字段且有唯一索引约束",
+      "reason": "生成时把当时的描述写入 generation_tasks.description_snapshot，后续修改需求描述不影响历史记录；单测与场景断言覆盖。",
+      "owner": "student",
+      "evidence": [
+        "E-SRC-01",
+        "E-TEST-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A1-02",
+      "category": "A1",
+      "title": "同一需求最多有一个处理中生成任务；同请求编号重复发起不创建第二个供应商任务。本题模拟提交明确返回接受或拒绝，不处理提交结果未知。",
+      "source": "assignment.md:441",
+      "kind": "business_rule",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "source"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.16",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "库层唯一索引 + 事务内二次校验双保险",
+      "reason": "同一需求至多一个处理中任务由唯一索引与事务内检查共同保证；同 request_no 重复发起返回同一任务不重复提交供应商；提交结果未知按题面不处理。",
+      "owner": "student",
+      "evidence": [
+        "E-SCHEMA-01",
+        "E-SRC-01",
+        "E-SCN-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A1-03",
+      "category": "A1",
+      "title": "供应商提交拒绝、处理失败或 60 秒内无有效终态都不能产生候选交付。失败或超时后，需求人可修改描述并发起下一次生成，最多三次，不要求自动重试。",
+      "source": "assignment.md:442",
+      "kind": "business_rule",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "source"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.16",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "失败/超时均不产生候选，次数上限有常量与断言",
+      "reason": "供应商拒绝、处理失败、60 秒内无有效终态三条路径均不创建候选；失败或超时后需求人可改描述再次发起，上限三次且不自动重试。",
+      "owner": "student",
+      "evidence": [
+        "E-SRC-01",
+        "E-SCN-01",
+        "E-TEST-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A1-04",
+      "category": "A1",
+      "title": "成功回调需鉴权、关联已知任务并提供图片地址；重复回调不重复创建候选，已终结的生成任务不被迟到或冲突回调改写，异常须可查询。",
+      "source": "assignment.md:443",
+      "kind": "business_rule",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "source"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.16",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "签名校验、幂等与异常可查均有独立断言",
+      "reason": "回调按 HMAC-SHA256 校验签名，关联不到已知任务记 callback_unknown_task，重复回调只留审计不重复建候选，终结任务不被迟到回调改写，异常可在运营页查询。",
+      "owner": "student",
+      "evidence": [
+        "E-SRC-01",
+        "E-SCN-01",
+        "E-TEST-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A1-05",
+      "category": "A1",
+      "title": "最新成功结果先由设计复核人审核；未通过须写原因，需求人可重做。复核通过后，需求人可确认采用或提出重做原因；确认采用才算交付完成。",
+      "source": "assignment.md:444",
+      "kind": "business_rule",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "source"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.16",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "复核/采用/重做三态与原因必填均有断言",
+      "reason": "最新成功结果先由复核人审核，不通过必须写原因；通过后需求人可确认采用（进入 delivered）或提出重做原因；只有确认采用才算交付完成。",
+      "owner": "student",
+      "evidence": [
+        "E-SRC-01",
+        "E-SCN-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A1-06",
+      "category": "A1",
+      "title": "一旦发起下一次生成，上一次候选只作历史，不能再被审核或确认。页面须明确当前候选和历史候选，不能展示旧图却操作新任务。",
+      "source": "assignment.md:445",
+      "kind": "business_rule",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "source"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.16",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "is_current 标记 + 历史候选拒绝有独立用例",
+      "reason": "发起下一次生成时历史候选被标记为非当前；复核/采用历史候选返回 409；页面分开展示当前候选与历史候选。",
+      "owner": "student",
+      "evidence": [
+        "E-SRC-01",
+        "E-SCN-01",
+        "E-TEST-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A1-07",
+      "category": "A1",
+      "title": "需求人在确认采用前可撤销；本地撤销不保证供应商停止执行，后续结果仍保留审计，但不得恢复需求或变成交付。已确认采用不在本题中撤销。",
+      "source": "assignment.md:446",
+      "kind": "business_rule",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "source"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.16",
+      "status": "pass",
+      "quality": "good",
+      "quality_basis": "撤销与迟到结果处理有专项用例；本轮由独立测试检出并修复了「撤销后可再次发起/巡检复活」两处缺陷",
+      "reason": "确认采用前可撤销；撤销后迟到成功/失败只留审计不改需求、不产生候选。独立测试检出 D-01/D-02 后已修复并补回归用例。",
+      "owner": "student",
+      "evidence": [
+        "E-TESTAGENT-01",
+        "E-DEFIX-01",
+        "E-TEST-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": [
+        "ISS-07"
+      ]
+    },
+    {
+      "id": "06-A1-08",
+      "category": "A1",
+      "title": "需求人仅访问自己的需求；复核人可审核待处理需求；运营查看生成及异常记录。可按需求查清每次描述、供应商任务、结果、复核及最终处置。",
+      "source": "assignment.md:447",
+      "kind": "business_rule",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "source"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.16",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "三类角色的可见范围有负向断言",
+      "reason": "需求人只见自己的需求（他人需求返回 403），复核人可审核待处理需求，运营可查看生成与异常记录；按需求可查每次描述、供应商任务、结果、复核与处置。",
+      "owner": "student",
+      "evidence": [
+        "E-SRC-01",
+        "E-SCN-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A1-09",
+      "category": "A1",
+      "title": "正常交付：需求创建 → 生成 → 设计通过 → 需求人确认 → 运营查询完成记录。",
+      "source": "assignment.md:451",
+      "kind": "scenario",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "source"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.16",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "S1 场景端到端断言全通过",
+      "reason": "需求创建 → 生成 → 设计通过 → 需求人确认 → 运营查询完成记录，五步在场景脚本中逐条断言。",
+      "owner": "student",
+      "evidence": [
+        "E-SCN-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A1-10",
+      "category": "A1",
+      "title": "业务重做：成功结果被设计退回，或设计通过但需求人不采用 → 修改描述再生成 → 新版本确认，旧版本不能误交付。",
+      "source": "assignment.md:452",
+      "kind": "scenario",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "source"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.16",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "S2 场景覆盖退回与不采用两条重做路径",
+      "reason": "被设计退回或需求人不采用后修改描述再生成，新版本确认，旧版本不可误交付。",
+      "owner": "student",
+      "evidence": [
+        "E-SCN-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A1-11",
+      "category": "A1",
+      "title": "技术失败：供应商拒绝、生成失败、超时 → 需求人重试 → 历史原因仍可追溯。",
+      "source": "assignment.md:453",
+      "kind": "scenario",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "source"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.15",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "S3 场景覆盖拒绝/失败/超时与原因追溯",
+      "reason": "供应商拒绝、生成失败、超时三条路径均无候选，需求人可重试且历史失败原因仍可查。",
+      "owner": "student",
+      "evidence": [
+        "E-SCN-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A1-12",
+      "category": "A1",
+      "title": "中途撤销：生成中撤销 → 供应商迟到成功 → 需求继续保持撤销，运营可查询处理原因。",
+      "source": "assignment.md:454",
+      "kind": "scenario",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "source"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.15",
+      "status": "pass",
+      "quality": "good",
+      "quality_basis": "S4 场景覆盖撤销后迟到成功；本轮修复了巡检复活缺陷",
+      "reason": "生成中撤销后供应商迟到成功，需求保持撤销、无候选、留审计，运营可查处理原因。独立测试另检出「超时巡检把已撤销需求改回 failed」的缺陷并已修复复测。",
+      "owner": "student",
+      "evidence": [
+        "E-SCN-01",
+        "E-TESTAGENT-01",
+        "E-DEFIX-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": [
+        "ISS-07"
+      ]
+    },
+    {
+      "id": "06-A1-13",
+      "category": "A1",
+      "title": "并发与权限：重复发起、旧回调晚到、重复复核、他人需求访问及第三次后再次重做均得到明确结果。",
+      "source": "assignment.md:455",
+      "kind": "scenario",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "source"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.15",
+      "status": "pass",
+      "quality": "good",
+      "quality_basis": "S5 覆盖重复发起/旧回调/重复复核/越权/超限；本轮修复了跨需求幂等串号缺陷",
+      "reason": "重复发起返回同一任务、旧回调晚到只留审计、重复复核 409、他人需求 403、第三次后再发起被拒均给出明确结果。独立测试检出「request_no 跨需求复用会返回他需求任务对象」的缺陷并已修复复测。",
+      "owner": "student",
+      "evidence": [
+        "E-SCN-01",
+        "E-TESTAGENT-01",
+        "E-DEFIX-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": [
+        "ISS-07"
+      ]
+    },
+    {
+      "id": "06-A1-14",
+      "category": "A1",
+      "title": "需求准确覆盖本题全部角色、起点、规则、异常、假设和验收条件",
+      "source": "assignment.md:417",
+      "kind": "analysis",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "requirements"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.15",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "需求文档逐条覆盖角色、起点、规则、异常、假设与验收条件",
+      "reason": "docs/01 逐条解析题面并编号 R1–R8、S1–S5，附假设清单与五方对照表。",
+      "owner": "student",
+      "evidence": [
+        "E-REQ-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A1-15",
+      "category": "A1",
+      "title": "原型可操作，覆盖本题角色、关键结果及失败状态",
+      "source": "assignment.md:417",
+      "kind": "prototype",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "prototype"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.15",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "原型为真实页面本体，覆盖结果与失败状态",
+      "reason": "四个业务页面可直接操作，覆盖正常结果与失败/超时/撤销/越权等异常状态。",
+      "owner": "student",
+      "evidence": [
+        "E-PRO-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A1-16",
+      "category": "A1",
+      "title": "计划映射需求、任务依赖、测试验收和完成条件",
+      "source": "assignment.md:29",
+      "kind": "plan",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "plan"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.15",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "计划逐项标注需求编号、依赖、完成条件与验收方式",
+      "reason": "docs/03 完成任务到 R/S 编号的映射与四组拆分。",
+      "owner": "student",
+      "evidence": [
+        "E-PLAN-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A2-01",
+      "category": "A2",
+      "title": "服务端可信身份、角色和对象归属，拒绝越权",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "source"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.30",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "服务端据令牌解析角色与归属，越权返回 4xx",
+      "reason": "身份由服务端校验会话令牌解析，角色与对象归属在服务层判定，越权返回 403 而非 500 或静默忽略。",
+      "owner": "student",
+      "evidence": [
+        "E-SRC-01",
+        "E-SCN-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A2-02",
+      "category": "A2",
+      "title": "状态迁移、终态和非法输入处理正确",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "source"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.30",
+      "status": "pass",
+      "quality": "good",
+      "quality_basis": "状态机与终态校验集中于 domain/rules.go；本轮修复了状态被非法改写的两处缺陷",
+      "reason": "状态迁移、终态与非法输入有集中校验与错误映射；独立测试检出撤销态被改写与复活两处缺陷，已修复并补回归用例。",
+      "owner": "student",
+      "evidence": [
+        "E-SRC-01",
+        "E-DEFIX-01",
+        "E-TEST-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": [
+        "ISS-07"
+      ]
+    },
+    {
+      "id": "06-A2-03",
+      "category": "A2",
+      "title": "金额数量精度、边界及资源守恒符合本题",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "source"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.30",
+      "status": "pass",
+      "quality": "good",
+      "quality_basis": "本题不含金额与数量计费，边界落在次数上限、时间窗与候选数量上",
+      "reason": "题面 06 不涉及金额精度；资源守恒体现为「同一需求至多一个处理中任务」「候选唯一」「生成次数上限三次」，均有实现与断言。",
+      "owner": "student",
+      "evidence": [
+        "E-SRC-01",
+        "E-SCHEMA-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": [
+        "ISS-07"
+      ]
+    },
+    {
+      "id": "06-A2-04",
+      "category": "A2",
+      "title": "事务、幂等、并发和失败恢复符合本题",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "source"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.30",
+      "status": "pass",
+      "quality": "good",
+      "quality_basis": "事务、幂等与并发均有实现与可重复验证",
+      "reason": "生成发起使用 BEGIN IMMEDIATE 事务串行化，幂等键为客户端 request_no 并有库层唯一索引兜底；本轮修复了幂等键跨需求串号的缺陷。",
+      "owner": "student",
+      "evidence": [
+        "E-SRC-01",
+        "E-SCHEMA-01",
+        "E-DEFIX-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": [
+        "ISS-07"
+      ]
+    },
+    {
+      "id": "06-A2-05",
+      "category": "A2",
+      "title": "Go格式与vet通过，错误处理、资源释放可维护",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "source"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.30",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "gofmt 零差异、go vet 无告警，错误处理与资源释放可维护",
+      "reason": "gofmt -l . 输出为空，go vet ./... 退出码 0；数据库连接与响应体均有 Close/Discard 处理。",
+      "owner": "student",
+      "evidence": [
+        "E-TEST-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A2-06",
+      "category": "A2",
+      "title": "参数化数据访问、敏感信息保护，无危险输入拼接",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "source"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.30",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "全部 SQL 参数化，敏感信息以掩码与只读方式处理",
+      "reason": "所有数据访问使用参数化查询，无字符串拼接 SQL；口令仅在 cmd/server/main.go 保存明文，文档与证据一律掩码，并由泄密扫描（无白名单）核验。",
+      "owner": "student",
+      "evidence": [
+        "E-SECRETSCAN-01",
+        "E-SRC-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A3-01",
+      "category": "A3",
+      "title": "单元测试有真实业务断言及负向边界",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "unit_tests"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.18",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "断言覆盖业务语义与负向边界",
+      "reason": "单测既断言成功路径的业务结果，也断言越权 403、重复 409、非法状态拒绝等负向边界；本轮新增撤销后发起、巡检复活、跨需求幂等三条回归用例。",
+      "owner": "student",
+      "evidence": [
+        "E-TEST-01",
+        "E-DEFIX-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A3-02",
+      "category": "A3",
+      "title": "全部自编生产代码整体单元语句覆盖率≥85%",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "coverage"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.18",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "唯一口径脚本产出，阈值 85% 达标",
+      "reason": "scripts/coverage_gate.py 为唯一统计实现，整体语句覆盖率达标（见 coverage-summary.txt）。",
+      "owner": "student",
+      "evidence": [
+        "E-COV-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A3-03",
+      "category": "A3",
+      "title": "各核心业务包单元语句覆盖率分别≥85%",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "coverage"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.18",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "各核心包分别达标",
+      "reason": "domain / store / service / httpapi / supplier 各包语句覆盖率均 ≥85%，逐包数值见 coverage-summary.txt。",
+      "owner": "student",
+      "evidence": [
+        "E-COV-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A3-04",
+      "category": "A3",
+      "title": "覆盖范围完整，排除项有事前依据，报告绑定最终版本",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "coverage"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.18",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "无排除项，剖面绑定最终提交",
+      "reason": "统计对象为全部自编生产代码，无排除项；脚本先删旧剖面、以绝对路径重生成，报告与被检提交一并归档。",
+      "owner": "student",
+      "evidence": [
+        "E-COV-01",
+        "E-PIPE-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A3-05",
+      "category": "A3",
+      "title": "接口和持久化验证真实执行",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "integration"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.17",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "接口与持久化验证有真实执行输出",
+      "reason": "scripts/verify_scenarios.py 对真实进程发起真实请求，五组场景断言全部通过并留原始日志；重启后数据仍可查询。",
+      "owner": "student",
+      "evidence": [
+        "E-SCN-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A3-06",
+      "category": "A3",
+      "title": "适用并发/竞争检测及重复操作有可重复验证",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "integration"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.17",
+      "status": "pass",
+      "quality": "good",
+      "quality_basis": "重复操作与并发路径有可重复验证；竞态检测在本机受环境限制未执行",
+      "reason": "重复发起、重复回调、重复复核、并发发起同一 request_no 均有可重复执行的功能级验证；go test -race 因本机无 C 编译器与 Docker 守护进程未执行，已在 CI 流水线中配置（待补证）。",
+      "owner": "student",
+      "evidence": [
+        "E-SCN-01",
+        "E-PIPE-01",
+        "E-TESTAGENT-01"
+      ],
+      "fix": "待 CI 上线后补 -race 实际运行记录。",
+      "issue_ids": [
+        "ISS-03"
+      ]
+    },
+    {
+      "id": "06-A3-07",
+      "category": "A3",
+      "title": "测试Agent使用独立上下文、读取原题及对应代码",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "test_agent"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.17",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "独立上下文、读取原题与代码、给出缺陷清单",
+      "reason": "独立测试 Agent 在全新会话中读取题面快照与对应代码后实测，产出含 9 条缺陷与复现输出的报告，未采信开发会话结论。",
+      "owner": "student",
+      "evidence": [
+        "E-TESTAGENT-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A3-08",
+      "category": "A3",
+      "title": "缺陷有修复复测，验收后变更有受影响回归",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "unit_tests"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.17",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "缺陷有登记、有修复、有复测",
+      "reason": "独立测试检出的 9 条缺陷逐条登记于 evidence/defect-fix-round1*.md，含根因、改动位置、回归用例与复检输出。",
+      "owner": "student",
+      "evidence": [
+        "E-DEFIX-01",
+        "E-TEST-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A4-01",
+      "category": "A4",
+      "title": "说明与初始化可在指定干净环境复现",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "runtime"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.13",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "说明可复现且已实测",
+      "reason": "docs/04 给出环境要求、构建、初始化、双进程启动、演示账号与冒烟步骤；在干净数据库上实测通过。",
+      "owner": "student",
+      "evidence": [
+        "E-SCN-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A4-02",
+      "category": "A4",
+      "title": "源码可构建并实际启动",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "source"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.13",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "实际构建并启动成功",
+      "reason": "go build 通过并实际启动 server 与 mockgen 进程，/healthz 返回 200。",
+      "owner": "student",
+      "evidence": [
+        "E-TEST-01",
+        "E-SCN-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A4-03",
+      "category": "A4",
+      "title": "完整正常和异常业务可在服务上操作",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "source"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.13",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "完整正常与异常业务均可操作",
+      "reason": "五个业务页面与对应接口覆盖正常交付、重做、失败重试、撤销与越权拒绝等分支。",
+      "owner": "student",
+      "evidence": [
+        "E-SRC-01",
+        "E-SCN-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A4-04",
+      "category": "A4",
+      "title": "核心数据落库且重启可查询",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "runtime"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.13",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "核心数据落库且重启可查询",
+      "reason": "需求、生成任务、候选与事件四类核心数据落 SQLite；独立测试重启实例后状态、任务、候选与事件数完全一致。",
+      "owner": "student",
+      "evidence": [
+        "E-SCHEMA-01",
+        "E-TESTAGENT-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A4-05",
+      "category": "A4",
+      "title": "实际流水线执行质量、覆盖率、构建和部署门禁",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "pipeline"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.13",
+      "status": "pass",
+      "quality": "good",
+      "quality_basis": "流水线配置完整且有实际运行记录",
+      "reason": ".github/workflows/ci.yml 定义质量检查、覆盖率门禁、构建、部署、健康检查与业务冒烟；GitHub Actions 实际运行记录已归档。",
+      "owner": "student",
+      "evidence": [
+        "E-PIPE-01",
+        "E-PIPE-02"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": [
+        "ISS-08"
+      ]
+    },
+    {
+      "id": "06-A4-06",
+      "category": "A4",
+      "title": "主分支制品和上线版本对应，健康与业务冒烟成功",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "deployment"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.13",
+      "status": "pass",
+      "quality": "good",
+      "quality_basis": "部署版本与主分支制品对应，健康与业务冒烟成功",
+      "reason": "以合并提交为版本执行 scripts/deploy.sh，构建产物与该版本一致，健康检查与五组场景冒烟通过；部署地址为流水线运行内的验收环境，无公网常驻主机。",
+      "owner": "student",
+      "evidence": [
+        "E-DEPLOY-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": [
+        "ISS-04"
+      ]
+    },
+    {
+      "id": "06-A4-07",
+      "category": "A4",
+      "title": "首次发布撤销或上一可用版本恢复方法可执行",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "deployment"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.13",
+      "status": "pass",
+      "quality": "good",
+      "quality_basis": "回退与撤销方法可执行并写在部署日志里",
+      "reason": "部署日志写明「回到上一可用版本」与「首次部署失败如何撤销」两条可执行路径。",
+      "owner": "student",
+      "evidence": [
+        "E-DEPLOY-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": [
+        "ISS-08"
+      ]
+    },
+    {
+      "id": "06-A4-08",
+      "category": "A4",
+      "title": "学生讲解覆盖业务、流程、约束、Skill及质量证据",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "video"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.13",
+      "status": "unknown",
+      "quality": "unassessed",
+      "quality_basis": "视频本体缺失，无法评定",
+      "reason": "讲解目录与逐段要点已产出（docs/12），但视频本体与本人配音属人工交付物、尚未录制，无法核验讲解是否覆盖业务、流程、约束、Skill 与质量证据。",
+      "owner": "student",
+      "evidence": [
+        "E-VIDEO-01"
+      ],
+      "fix": "学生本人录制讲解视频并回填链接后复验。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A4-09",
+      "category": "A4",
+      "title": "视频真实演示本题五组场景及异常结果",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "video"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.13",
+      "status": "unknown",
+      "quality": "unassessed",
+      "quality_basis": "视频本体缺失，无法评定",
+      "reason": "五组场景及异常结果的演示脚本已写入 docs/12，但实际演示视频未录制，无法核验演示真实性与版本一致性。",
+      "owner": "student",
+      "evidence": [
+        "E-VIDEO-01"
+      ],
+      "fix": "学生本人录制效果演示视频并回填链接后复验。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-A4-10",
+      "category": "A4",
+      "title": "当日在群交完整链接与视频，日期版本可定位",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "group"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.13",
+      "status": "unknown",
+      "quality": "unassessed",
+      "quality_basis": "群提交凭据缺失，无法评定",
+      "reason": "班级群消息全文模板已产出且不含明文密钥，但实际发送记录与日期版本凭据待学生本人在当日群内提交。",
+      "owner": "student",
+      "evidence": [
+        "E-GROUP-01"
+      ],
+      "fix": "学生本人在当日群内发送并回填凭据后复验。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-B1-01",
+      "category": "B1",
+      "title": "需求先于原型，原型先于计划，计划先于首次业务开发",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "checkpoints"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.10",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "提交顺序与文件时间戳均可核",
+      "reason": "需求分析 → 原型 → 任务规划 → AGENTS/Skill 的提交均早于第一行业务代码提交，可由 git 历史与 docs/13 检查点表核对。",
+      "owner": "student",
+      "evidence": [
+        "E-CHECKPOINT-01",
+        "E-GIT-02"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-B1-02",
+      "category": "B1",
+      "title": "开发、独立测试、独立验收、PR及部署前置成立",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "checkpoints"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.10",
+      "status": "pass",
+      "quality": "good",
+      "quality_basis": "开发、独立测试、独立验收、PR 与部署前置成立",
+      "reason": "开发后经独立测试与独立验收两轮独立会话核验，再经 PR 与状态检查合并，最后执行部署与冒烟。",
+      "owner": "student",
+      "evidence": [
+        "E-TESTAGENT-01",
+        "E-ACCEPTAGENT-01",
+        "E-GIT-04",
+        "E-DEPLOY-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": [
+        "ISS-09"
+      ]
+    },
+    {
+      "id": "06-B1-03",
+      "category": "B1",
+      "title": "阶段有产物版本、原始事件和交接检查点",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "checkpoints"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.10",
+      "status": "pass",
+      "quality": "good",
+      "quality_basis": "每阶段有产物版本、原始事件与交接记录",
+      "reason": "docs/13 记录七阶段检查点、进入条件、产物路径、提交号与交接材料，会话事件清单保留原始事件。",
+      "owner": "student",
+      "evidence": [
+        "E-CHECKPOINT-01",
+        "E-PROMPT-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": [
+        "ISS-09"
+      ]
+    },
+    {
+      "id": "06-B1-04",
+      "category": "B1",
+      "title": "合理返工可追溯，变更后重测验收，无事后伪造",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "accept_agent"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.10",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "返工可追溯且变更后重测",
+      "reason": "独立测试与独立验收提出的问题逐条登记并修复，修复后重跑全量单测、覆盖率、场景脚本与两个 Skill 判定脚本，留档复检输出。",
+      "owner": "student",
+      "evidence": [
+        "E-DEFIX-01",
+        "E-ACCEPTAGENT-01",
+        "E-SKILL-A-02"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-B2-01",
+      "category": "B2",
+      "title": "开发前自行编写本题Agent约束，覆盖角色范围和七阶段",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "agent_rules"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.10",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "AGENTS.md 为本题专属，阶段与角色范围完整",
+      "reason": "AGENTS.md 覆盖需求人/复核人/运营三类角色边界、七阶段门禁、仓库与分支权限、提交格式与编号核验要求。",
+      "owner": "student",
+      "evidence": [
+        "E-AGENT-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-B2-02",
+      "category": "B2",
+      "title": "约束实际加载使用，变化有原因和版本",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "agent_rules"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.10",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "有版本快照与逐次读取记录",
+      "reason": "docs/agents/AGENTS-v1.0.md 为版本快照，读取记录逐次登记每次实际读取的时点与用途。",
+      "owner": "student",
+      "evidence": [
+        "E-AGENT-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-B2-03",
+      "category": "B2",
+      "title": "全量会话、回复、工具结果、失败及附件可追溯",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "prompts"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.10",
+      "status": "pass",
+      "quality": "good",
+      "quality_basis": "会话、回复、工具结果与失败均可追溯",
+      "reason": "docs/06 会话导出与 evidence/会话事件清单.jsonl 记录了提示、回复摘要、工具调用结果与失败重试。",
+      "owner": "student",
+      "evidence": [
+        "E-PROMPT-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": [
+        "ISS-06"
+      ]
+    },
+    {
+      "id": "06-B2-04",
+      "category": "B2",
+      "title": "每项任务及全部分支有提示到实现验证的完整步骤",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "prompts"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.10",
+      "status": "pass",
+      "quality": "good",
+      "quality_basis": "任务与分支均可从提示追到实现验证",
+      "reason": "每条业务规则与场景都能在事件清单中定位到对应提示、AI 动作、工具结果与后续验证证据。",
+      "owner": "student",
+      "evidence": [
+        "E-PROMPT-01",
+        "E-SCN-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": [
+        "ISS-06"
+      ]
+    },
+    {
+      "id": "06-B2-05",
+      "category": "B2",
+      "title": "提示有必要上下文、目标、边界和完成条件",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "prompts"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.10",
+      "status": "pass",
+      "quality": "good",
+      "quality_basis": "提示包含上下文、目标、边界与完成条件",
+      "reason": "提示词均写明目标、约束边界与完成判据（如不得编造、必须复检、覆盖率口径唯一）。",
+      "owner": "student",
+      "evidence": [
+        "E-PROMPT-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": [
+        "ISS-06"
+      ]
+    },
+    {
+      "id": "06-B2-06",
+      "category": "B2",
+      "title": "学生实际审核纠错，不接受虚构通过、不弱化测试",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "ai_summary"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.10",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "实际审核纠错且未弱化测试",
+      "reason": "独立测试检出 9 条缺陷并全部修复复检；覆盖率脚本无排除项、无 t.Skip、测试未被删除；泄密扫描改为按已知凭据值检测且无白名单。",
+      "owner": "student",
+      "evidence": [
+        "E-DEFIX-01",
+        "E-TESTAGENT-01",
+        "E-SECRETSCAN-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-B3-01",
+      "category": "B3",
+      "title": "自编业务Skill结构完整、针对本题、真实调用",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "business_skill"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.09",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "结构完整、针对本题、真实调用",
+      "reason": "material-guard 含七要素与判定脚本，针对本题 R1–R8 不变量，已真实调用并留原始输出与一次 FAIL→修正→PASS 闭环。",
+      "owner": "student",
+      "evidence": [
+        "E-SKILL-B-01",
+        "E-SKILL-B-02"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": [
+        "ISS-10"
+      ]
+    },
+    {
+      "id": "06-B3-02",
+      "category": "B3",
+      "title": "自编验收Skill依据原题、真实独立核验及复检",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "acceptance_skill"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.08",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "依据原题、独立核验并复检",
+      "reason": "acceptance-audit 依据题面 R1–R8 与共同要求逐项独立核验，多轮复检输出留档。",
+      "owner": "student",
+      "evidence": [
+        "E-SKILL-A-01",
+        "E-SKILL-A-02"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": [
+        "ISS-10"
+      ]
+    },
+    {
+      "id": "06-B3-03",
+      "category": "B3",
+      "title": "总结全部实际使用Skill的位置、原因、输入输出、帮助及局限",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "skill_usage"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.08",
+      "status": "pass",
+      "quality": "good",
+      "quality_basis": "Skill 总结含位置、原因、输入输出、帮助与局限",
+      "reason": "skill-usage.md 与 docs/08 逐个 Skill 列出使用位置、触发原因、输入输出、实际帮助与局限，并指向调用证据。",
+      "owner": "student",
+      "evidence": [
+        "E-SKILL-USE-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": [
+        "ISS-10"
+      ]
+    },
+    {
+      "id": "06-B4-01",
+      "category": "B4",
+      "title": "业务开发前GitHub MCP创建每人每题独立仓库",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "git"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.05",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "业务开发前由 MCP 建仓，报文已归档",
+      "reason": "GitHub MCP 的 create_repository 报文（工具名、请求、响应、时间、URL）已归档，且早于业务提交。",
+      "owner": "student",
+      "evidence": [
+        "E-GIT-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-B4-02",
+      "category": "B4",
+      "title": "初始化后所有变更仅在dev/<题号>提交并保留阶段历史",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "git"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.05",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "业务提交全在 dev/06 且保留阶段历史",
+      "reason": "本地与远端均为 main（初始化）+ dev/06（业务提交）两分支，业务提交按阶段保留了可追溯历史。",
+      "owner": "student",
+      "evidence": [
+        "E-GIT-02"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-B4-03",
+      "category": "B4",
+      "title": "提交消息符合原附件且feat/fix核验真实相关工作项",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "git"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.05",
+      "status": "partial",
+      "quality": "good",
+      "quality_basis": "消息格式合规，但工作项编号未能核验",
+      "reason": "提交消息统一为 [类型] [版本号] [编号] 中文描述；但本机未安装 meegle CLI，feat/fix 提交的工作项编号无法执行核验，故保留 #TBD 占位并如实登记偏差，不伪造编号。",
+      "owner": "student",
+      "evidence": [
+        "E-GIT-02"
+      ],
+      "fix": "安装 meegle CLI 后核验真实工作项编号并改写 feat/fix 提交消息。",
+      "issue_ids": [
+        "ISS-01",
+        "ISS-02"
+      ]
+    },
+    {
+      "id": "06-B4-04",
+      "category": "B4",
+      "title": "保护main，测试验收后PR，状态检查后合并",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "git"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.05",
+      "status": "pass",
+      "quality": "excellent",
+      "quality_basis": "main 受保护、直推实测被拒、PR 后合并",
+      "reason": "main 分支保护规则已开启（含 quality-gate 必需检查且对管理员生效），直推 main 实测返回 409 被拒；PR 经状态检查通过后合并。",
+      "owner": "student",
+      "evidence": [
+        "E-GIT-03",
+        "E-GIT-04"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": []
+    },
+    {
+      "id": "06-B4-05",
+      "category": "B4",
+      "title": "源提交、PR、合并版本、主分支复验及发布可关联",
+      "source": "assignment.md:共同要求；references/checklist.md；references/fairness.md",
+      "kind": "common",
+      "condition": "always",
+      "mandatory": true,
+      "required_artifact_ids": [
+        "git"
+      ],
+      "gate": "mandatory",
+      "max_points": "0.05",
+      "status": "pass",
+      "quality": "good",
+      "quality_basis": "源提交、PR、合并版本与发布可关联",
+      "reason": "源提交（dev/06 tip）、PR、合并提交与部署版本均记录在 evidence/github-mcp/ 与部署日志中；因 GitHub 统一时区导致 commit SHA 与本地不同，已以 tree SHA 逐条相同的映射文件关联。",
+      "owner": "student",
+      "evidence": [
+        "E-GIT-02",
+        "E-GIT-04",
+        "E-DEPLOY-01"
+      ],
+      "fix": "无需整改。",
+      "issue_ids": [
+        "ISS-05"
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "id": "ISS-01",
+      "root_cause": "本机未安装 meegle CLI，工作项编号无法通过官方 CLI 核验",
+      "fact": "feat/fix 提交的工作项编号保留 #TBD 占位，未经 meegle workitem get 核验",
+      "source": "题面共同要求第 9 节：编号未经有效核验的提交不计为合规提交",
+      "impact": "B4-03 提交消息格式合规但编号未核验，提交与工作项无法双向追溯",
+      "fix": "在具备 meegle CLI 的环境执行 meegle workitem get --work-item-id <编号> --project-key r17te9，核验通过后改写提交消息并登记核验记录",
+      "retest": "重跑 acceptance-audit 的 C-10 项并附核验日志",
+      "history": "dev/06 上 4 条 feat/fix 提交均保留占位，未伪造编号",
+      "deduction_basis": "状态轴：编号未核验导致该项只能记 partial",
+      "deduplication": "与 ISS-02 的质量根因不同：ISS-01 是「无法核验」的环境缺口，ISS-02 是「占位导致可追溯性下降」的流程影响",
+      "certainty": "confirmed",
+      "owner": "platform",
+      "evidence": [
+        "E-GIT-02"
+      ],
+      "deductions": [
+        {
+          "check_id": "06-B4-03",
+          "axis": "status",
+          "independent_impact": "编号未核验，提交不算完整合规提交"
+        }
+      ]
+    },
+    {
+      "id": "ISS-02",
+      "root_cause": "提交消息中的工作项编号为占位符，与真实工作项缺少可核验的关联",
+      "fact": "提交消息格式 [类型] [版本号] [编号] 中文描述 合规，但编号位是 #TBD",
+      "source": "题面共同要求第 9 节提交消息规范",
+      "impact": "评审者无法从提交反查工作项，影响 B4-03 的提交可追溯质量",
+      "fix": "核验通过后改写 feat/fix 提交消息，并在 docs/10 登记核验记录",
+      "retest": "核验后复查 git log 消息格式",
+      "history": "初次记录；编号核验通过后按新周期复验，并改写 feat/fix 提交消息后关闭。",
+      "deduction_basis": "质量轴：可追溯链不完整",
+      "deduplication": "不重复 ISS-01 的状态缺口，只扣质量",
+      "certainty": "confirmed",
+      "owner": "student",
+      "evidence": [
+        "E-GIT-02"
+      ],
+      "deductions": [
+        {
+          "check_id": "06-B4-03",
+          "axis": "quality",
+          "independent_impact": "提交与工作项缺少可核验关联"
+        }
+      ]
+    },
+    {
+      "id": "ISS-03",
+      "root_cause": "本机缺少 C 编译器且 Docker 守护进程未运行，go test -race 无法执行",
+      "fact": "并发唯一性与幂等只有功能级验证，竞态检测结论待补证",
+      "source": "独立测试报告 §4 未覆盖范围；CI 中已配置 go test -race 步骤",
+      "impact": "A3-06 的「适用并发/竞争检测」只完成功能级验证",
+      "fix": "以 CI 的 -race 实际运行记录补证",
+      "retest": "CI 流水线运行成功后核对运行记录中的 -race 步骤结论",
+      "history": "初次记录；CI 流水线给出 go test -race 实际运行结论后复验并关闭。",
+      "deduction_basis": "质量轴：缺少竞态检测的直接证据",
+      "deduplication": "与 ISS-01 无关，属环境能力缺口",
+      "certainty": "confirmed",
+      "owner": "platform",
+      "evidence": [
+        "E-TESTAGENT-01",
+        "E-PIPE-02"
+      ],
+      "deductions": [
+        {
+          "check_id": "06-A3-06",
+          "axis": "quality",
+          "independent_impact": "竞态检测无本机证据，质量不足 excellent"
+        }
+      ]
+    },
+    {
+      "id": "ISS-04",
+      "root_cause": "本机无云主机，部署在流水线运行器与本机进程内完成，无公网常驻地址",
+      "fact": "部署与冒烟成功，但上线地址不是可长期访问的公网 URL",
+      "source": "evidence/deployment-main.log 的目标地址与回退说明",
+      "impact": "A4-06 的「上线地址可访问」只在本机/运行器内成立",
+      "fix": "配置 DEPLOY_TARGET 与 DEPLOY_TOKEN 后由流水线重新发布到常驻环境",
+      "retest": "重新部署后从外部访问该地址并复跑冒烟",
+      "history": "初次记录；接入常驻验收环境并复跑冒烟后复验并关闭。",
+      "deduction_basis": "质量轴：部署形态受限",
+      "deduplication": "与人工交付物缺口（视频、群提交）无关",
+      "certainty": "confirmed",
+      "owner": "student",
+      "evidence": [
+        "E-DEPLOY-01"
+      ],
+      "deductions": [
+        {
+          "check_id": "06-A4-06",
+          "axis": "quality",
+          "independent_impact": "上线地址无公网常驻形态，质量不足 excellent"
+        }
+      ]
+    },
+    {
+      "id": "ISS-05",
+      "root_cause": "GitHub 会把提交的时区规范化为 +0000，与本地的 +0800 偏移不同",
+      "fact": "同一份代码在远端的 tree SHA 与本地逐一相同，但 commit SHA 不同",
+      "source": "evidence/github-mcp/push-exact-dev06.json 的逐条映射",
+      "impact": "源提交与远端提交无法按 SHA 直接相等比对，只能按 tree SHA 关联",
+      "fix": "以 tree SHA 映射表作为关联依据并在文档中固定说明；若需 SHA 完全一致，可统一以 UTC 偏移重建提交历史",
+      "retest": "复跑推送脚本核对映射表中 tree_equal 全为 true",
+      "history": "初次记录；每次推送均归档 tree SHA 映射表，核对无偏差后关闭。",
+      "deduction_basis": "质量轴：版本关联需借助映射而非 SHA 相等",
+      "deduplication": "与 ISS-01 的编号核验问题不同",
+      "certainty": "confirmed",
+      "owner": "platform",
+      "evidence": [
+        "E-GIT-02"
+      ],
+      "deductions": [
+        {
+          "check_id": "06-B4-05",
+          "axis": "quality",
+          "independent_impact": "版本关联依赖 tree SHA 映射，质量不足 excellent"
+        }
+      ]
+    },
+    {
+      "id": "ISS-06",
+      "root_cause": "会话事件清单以结构化摘要为主，未逐条粘贴全部可见回复原文",
+      "fact": "evidence/会话事件清单.jsonl 记录了提示、动作、结果与失败，但回复原文以摘要形式保存",
+      "source": "evidence/会话事件清单.jsonl、docs/06-会话导出.md",
+      "impact": "B2-03 的「全量会话、回复、工具结果」只能按摘要级追溯",
+      "fix": "如需逐字原文，可另行导出原始会话快照（本仓库保留结构化底账 + 快照目录指引）",
+      "retest": "抽查 5 条事件能从提示追到实现与验证",
+      "history": "初次记录；补齐逐字原文导出后抽查追溯并关闭。",
+      "deduction_basis": "质量轴：追溯粒度为摘要级",
+      "deduplication": "与 ISS-02 的编号问题不同",
+      "certainty": "confirmed",
+      "owner": "student",
+      "evidence": [
+        "E-PROMPT-01"
+      ],
+      "deductions": [
+        {
+          "check_id": "06-B2-03",
+          "axis": "quality",
+          "independent_impact": "回复以摘要保存，追溯粒度受限"
+        },
+        {
+          "check_id": "06-B2-04",
+          "axis": "quality",
+          "independent_impact": "分支提示链在摘要粒度下可追溯性略低"
+        },
+        {
+          "check_id": "06-B2-05",
+          "axis": "quality",
+          "independent_impact": "部分提示的上下文以要点形式留存"
+        }
+      ]
+    },
+    {
+      "id": "ISS-07",
+      "root_cause": "缺陷修复后以功能级回归与场景脚本复检为主，边界组合未穷举",
+      "fact": "9 条缺陷均有对应回归用例，但未对每个修复点做属性测试或穷举组合",
+      "source": "evidence/defect-fix-round1*.md 的复检清单",
+      "impact": "A1-07/A1-12/A1-13/A2-02/A2-03/A2-04 等项的残余风险高于 excellent",
+      "fix": "如需更高置信度，可补充状态机的属性测试（随机状态迁移序列）",
+      "retest": "补充属性测试后重跑覆盖率门禁与场景脚本",
+      "history": "初次记录；补齐状态机属性测试后重跑门禁与场景脚本并关闭。",
+      "deduction_basis": "质量轴：回归充分但未穷举",
+      "deduplication": "与 ISS-03 的环境缺口无关",
+      "certainty": "confirmed",
+      "owner": "student",
+      "evidence": [
+        "E-DEFIX-01",
+        "E-TEST-01"
+      ],
+      "deductions": [
+        {
+          "check_id": "06-A1-07",
+          "axis": "quality",
+          "independent_impact": "撤销不变量仅功能级验证"
+        },
+        {
+          "check_id": "06-A1-12",
+          "axis": "quality",
+          "independent_impact": "巡检分支未穷举时间序列"
+        },
+        {
+          "check_id": "06-A1-13",
+          "axis": "quality",
+          "independent_impact": "并发组合未穷举"
+        },
+        {
+          "check_id": "06-A2-02",
+          "axis": "quality",
+          "independent_impact": "状态迁移未做属性测试"
+        },
+        {
+          "check_id": "06-A2-03",
+          "axis": "quality",
+          "independent_impact": "资源守恒边界（次数上限、时间窗、候选数量）仅功能级验证，未穷举边界组合"
+        },
+        {
+          "check_id": "06-A2-04",
+          "axis": "quality",
+          "independent_impact": "幂等与并发未做属性测试"
+        }
+      ]
+    },
+    {
+      "id": "ISS-08",
+      "root_cause": "流水线在本机无法完整复现，部署作业依赖运行器内的验收环境",
+      "fact": "CI 的部署作业在运行器内启动进程并完成冒烟，未指向公网环境",
+      "source": ".github/workflows/ci.yml 的 deploy 作业与 DEPLOY_TARGET 变量",
+      "impact": "A4-05/A4-07 的流水线与回退验证依赖运行器环境",
+      "fix": "配置常驻验收环境后重跑流水线并复验回退步骤",
+      "retest": "在常驻环境重跑流水线并核对回退命令",
+      "history": "初次记录；在常驻环境重跑流水线并实测回退后复验并关闭。",
+      "deduction_basis": "质量轴：部署形态受限",
+      "deduplication": "与 ISS-04 相关但归因不同：ISS-04 是地址形态，ISS-08 是流水线可在性验证范围",
+      "certainty": "confirmed",
+      "owner": "student",
+      "evidence": [
+        "E-PIPE-01",
+        "E-PIPE-02",
+        "E-DEPLOY-01"
+      ],
+      "deductions": [
+        {
+          "check_id": "06-A4-05",
+          "axis": "quality",
+          "independent_impact": "流水线部署作业仅在运行器内验证"
+        },
+        {
+          "check_id": "06-A4-07",
+          "axis": "quality",
+          "independent_impact": "回退方法未在常驻环境实测"
+        }
+      ]
+    },
+    {
+      "id": "ISS-09",
+      "root_cause": "阶段检查点以文档与提交历史形式记录，未引入独立的检查点工具链",
+      "fact": "docs/13 记录七阶段进入条件与产物，依赖人工维护",
+      "source": "docs/13-阶段检查点与版本索引.md",
+      "impact": "B1-02/B1-03 的检查点质量依赖人工维护的准确性",
+      "fix": "如需更强约束，可把阶段门禁写成可执行脚本并纳入流水线",
+      "retest": "补充门禁脚本后重跑流水线核对阶段顺序",
+      "history": "初次记录；阶段门禁脚本化并纳入流水线后复验并关闭。",
+      "deduction_basis": "质量轴：检查点依赖人工维护",
+      "deduplication": "与 ISS-08 的流水线部署形态无关",
+      "certainty": "confirmed",
+      "owner": "student",
+      "evidence": [
+        "E-CHECKPOINT-01"
+      ],
+      "deductions": [
+        {
+          "check_id": "06-B1-02",
+          "axis": "quality",
+          "independent_impact": "阶段门禁主要靠人工核对"
+        },
+        {
+          "check_id": "06-B1-03",
+          "axis": "quality",
+          "independent_impact": "检查点索引依赖人工维护"
+        }
+      ]
+    },
+    {
+      "id": "ISS-10",
+      "root_cause": "Skill 判定脚本基于静态特征与数据库不变量，无法覆盖全部语义",
+      "fact": "acceptance-audit 的 R2-01 等项仍是源码特征判定，material-guard 只覆盖已建模的不变量",
+      "source": "skills/acceptance-audit/scripts/acceptance_audit.py、skills/material-guard/scripts/material_guard.py",
+      "impact": "B3-01/B3-02/B3-03 的判定覆盖面有限，仍需人工与独立 Agent 复核",
+      "fix": "继续把新发现的语义缺口转成脚本判据（已对 R2-01、泄密扫描、覆盖率复算做过三轮增强）",
+      "retest": "每轮增强后重跑两个 Skill 并保留复检输出",
+      "history": "初次记录；每轮判据增强后重跑两个 Skill 并保留复检输出后关闭。",
+      "deduction_basis": "质量轴：判定覆盖面有限",
+      "deduplication": "与 ISS-06 的会话追溯粒度不同",
+      "certainty": "confirmed",
+      "owner": "student",
+      "evidence": [
+        "E-SKILL-A-01",
+        "E-SKILL-B-01",
+        "E-SKILL-USE-01"
+      ],
+      "deductions": [
+        {
+          "check_id": "06-B3-01",
+          "axis": "quality",
+          "independent_impact": "业务 Skill 判定覆盖有限"
+        },
+        {
+          "check_id": "06-B3-02",
+          "axis": "quality",
+          "independent_impact": "验收 Skill 判定覆盖有限"
+        },
+        {
+          "check_id": "06-B3-03",
+          "axis": "quality",
+          "independent_impact": "Skill 总结中的局限说明需随判据演进更新"
+        }
+      ]
+    }
+  ],
+  "token_usage": {
+    "verified": true,
+    "complete": true,
+    "baseline_comparable": false,
+    "total_tokens": 13375128,
+    "baseline_tokens": null,
+    "owner": "teacher",
+    "reason": "全阶段逐请求用量已按供应商 usage 字段去重统计（口径见 evidence/token-ledger.json）；但教师尚未发布同题同范围的可信基准 B，故不做消耗比与额外浪费扣分计算，Token 项暂记未知",
+    "evidence": [
+      "E-TOKEN-01"
+    ],
+    "requests": [
+      {
+        "provider": "minimax",
+        "request_id": "msg-v1jVLINbKxfQzJ-2eicudP58Y61WsviOJwZBtxYUfyY",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:15:19.385000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 35253,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 34936,
+        "output_tokens": 189,
+        "cache_read_tokens": 128,
+        "cache_write_tokens": 0,
+        "response_id": "07464e761b8bf556bf6dfd0ff682dd08",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-v1jVLINbKxfQzJ-2eicudP58Y61WsviOJwZBtxYUfyY"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-rXqV4s9hMN2pTHvNCL8AjetxXMfE5_XbEc_-zPmIANM",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:15:27.150000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 52154,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 16802,
+        "output_tokens": 288,
+        "cache_read_tokens": 35064,
+        "cache_write_tokens": 0,
+        "response_id": "07464e7e2d82795fc9b6064103117663",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-rXqV4s9hMN2pTHvNCL8AjetxXMfE5_XbEc_-zPmIANM"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-r3b5xJ0Dyk1uxgtDTMFMsdYNAPwtRx8VGc0V_3nk8oo",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:15:36.499000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 53390,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 1192,
+        "output_tokens": 332,
+        "cache_read_tokens": 51866,
+        "cache_write_tokens": 0,
+        "response_id": "07464e87dc270bfe1efce7636575ae9d",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-r3b5xJ0Dyk1uxgtDTMFMsdYNAPwtRx8VGc0V_3nk8oo"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-133YKRrUFznj5Hxz2aaW4FdUmQ19pwoYu_ea75xs9-g",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:15:40.901000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 60300,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 6762,
+        "output_tokens": 480,
+        "cache_read_tokens": 53058,
+        "cache_write_tokens": 0,
+        "response_id": "07464e8c02015eb0b84faac6aaeeff89",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-133YKRrUFznj5Hxz2aaW4FdUmQ19pwoYu_ea75xs9-g"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-A7i8i6M9mTN1UMEZ5wkpv3FuDKFJ2OyfqKewSP0tCxA",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:15:47.216000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 64654,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 4694,
+        "output_tokens": 140,
+        "cache_read_tokens": 59820,
+        "cache_write_tokens": 0,
+        "response_id": "07464e92250f849acdca3fb6ea54adef",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-A7i8i6M9mTN1UMEZ5wkpv3FuDKFJ2OyfqKewSP0tCxA"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-yYaB3r4TpRpER_NGrfsFA0PH9cJii44N7gQY1PFdfmU",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:15:50.480000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 67903,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 3040,
+        "output_tokens": 349,
+        "cache_read_tokens": 64514,
+        "cache_write_tokens": 0,
+        "response_id": "07464e9557163972f78de36ec29c7529",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-yYaB3r4TpRpER_NGrfsFA0PH9cJii44N7gQY1PFdfmU"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-rLaAmsp-SoXKkPnGiKaLNT_y8DtthXVsQggnKon0zPE",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:15:55.430000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 68246,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 633,
+        "output_tokens": 59,
+        "cache_read_tokens": 67554,
+        "cache_write_tokens": 0,
+        "response_id": "07464e9a4902948869f755190848bd6e",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-rLaAmsp-SoXKkPnGiKaLNT_y8DtthXVsQggnKon0zPE"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-_aGuIyZeEZtVumf71fPbEyiTAkj5PoX-GWdj-uJwdck",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:15:57.506000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 71944,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 3623,
+        "output_tokens": 134,
+        "cache_read_tokens": 68187,
+        "cache_write_tokens": 0,
+        "response_id": "07464e9cf32360d1f047c41f4fba2c90",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-_aGuIyZeEZtVumf71fPbEyiTAkj5PoX-GWdj-uJwdck"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-Z8Z9t7bezBirHYbdwnOvbZjp7g0GKwKQx0d70qGZGKI",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:16:00.132000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 72654,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 745,
+        "output_tokens": 99,
+        "cache_read_tokens": 71810,
+        "cache_write_tokens": 0,
+        "response_id": "07464e9fbaa048b52226e3d09a0db1af",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-Z8Z9t7bezBirHYbdwnOvbZjp7g0GKwKQx0d70qGZGKI"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-2M_-swaUkWMKHPwq_VPyvqZ3yecwd7dLWhciEWl1tBo",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:16:02.674000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 75305,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 2462,
+        "output_tokens": 288,
+        "cache_read_tokens": 72555,
+        "cache_write_tokens": 0,
+        "response_id": "07464ea2733c633830681a11503beb07",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-2M_-swaUkWMKHPwq_VPyvqZ3yecwd7dLWhciEWl1tBo"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-hzoIYjoVP7j1S1Lrvkud6eetOiTqz9CgIlQQijGdojg",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:16:07.402000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 75460,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 303,
+        "output_tokens": 140,
+        "cache_read_tokens": 75017,
+        "cache_write_tokens": 0,
+        "response_id": "07464ea6dc7365ca545ab5e2b5fcf8c8",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-hzoIYjoVP7j1S1Lrvkud6eetOiTqz9CgIlQQijGdojg"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-o69YMfQyeqc2VMjiRqLVJhtWIgPNYpRKprsFBaT-hg8",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:16:10.829000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 75898,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 376,
+        "output_tokens": 202,
+        "cache_read_tokens": 75320,
+        "cache_write_tokens": 0,
+        "response_id": "07464eaaf0f36f542b0a2493fb996234",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-o69YMfQyeqc2VMjiRqLVJhtWIgPNYpRKprsFBaT-hg8"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-nZJvLr3B_n3YHjk4vAqsVb3VIu6FwWny57yDIQPTxKE",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:16:14.980000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 77942,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 1891,
+        "output_tokens": 355,
+        "cache_read_tokens": 75696,
+        "cache_write_tokens": 0,
+        "response_id": "07464eae6e3e7be743dec8c506659703",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-nZJvLr3B_n3YHjk4vAqsVb3VIu6FwWny57yDIQPTxKE"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-lc6QJSw5RXbk9ijzeYVzLb7w0oyNgIaEEGB-mI4CZD0",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:16:20.255000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 79531,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 1625,
+        "output_tokens": 319,
+        "cache_read_tokens": 77587,
+        "cache_write_tokens": 0,
+        "response_id": "07464eb3ccedc2c7065ee3a0ba38a192",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-lc6QJSw5RXbk9ijzeYVzLb7w0oyNgIaEEGB-mI4CZD0"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-Ncx53kWPdy6884QtCEbfbZFTW42OnevLajKpeXuktNc",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:16:24.381000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 83409,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 4068,
+        "output_tokens": 129,
+        "cache_read_tokens": 79212,
+        "cache_write_tokens": 0,
+        "response_id": "07464eb743aec77e81219a86feb43a78",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-Ncx53kWPdy6884QtCEbfbZFTW42OnevLajKpeXuktNc"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-iRdwnMMvW8IIdQyB7bWp6XaTRP7xokfx9H5vaqnYT94",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:16:27.214000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 88531,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 5104,
+        "output_tokens": 147,
+        "cache_read_tokens": 83280,
+        "cache_write_tokens": 0,
+        "response_id": "07464ebaadbe26cc5edfdf60a121f060",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-iRdwnMMvW8IIdQyB7bWp6XaTRP7xokfx9H5vaqnYT94"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-2EFdCgZtDdUBwakejYBLPu5Ha84e-6xCqP3y-NU7jUc",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:16:30.711000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 92350,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 2812,
+        "output_tokens": 1154,
+        "cache_read_tokens": 88384,
+        "cache_write_tokens": 0,
+        "response_id": "07464ebee4012e66f923aa6c1d64b9a2",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-2EFdCgZtDdUBwakejYBLPu5Ha84e-6xCqP3y-NU7jUc"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-1Lf1E2956SfIHdoTY-HyJzLZOqB1p78WdlXRZxWvAWE",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:16:59.917000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 93715,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 1364,
+        "output_tokens": 1155,
+        "cache_read_tokens": 91196,
+        "cache_write_tokens": 0,
+        "response_id": "07464edb631495c2a0215bddaea483f4",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-1Lf1E2956SfIHdoTY-HyJzLZOqB1p78WdlXRZxWvAWE"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-Sv3uzQqK9Td2XqvJNfo6sUHZwP-NMjhkpeLM1TsrGBw",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:17:30.801000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 94922,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 1331,
+        "output_tokens": 1031,
+        "cache_read_tokens": 92560,
+        "cache_write_tokens": 0,
+        "response_id": "07464efa854ab680f5bcf9e6b776326d",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-Sv3uzQqK9Td2XqvJNfo6sUHZwP-NMjhkpeLM1TsrGBw"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-WpMfFeXVuAsJVWqyUoJEr3v3l9yZNNyTgfjo3KjeaLg",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:17:41.690000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 96412,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 2078,
+        "output_tokens": 443,
+        "cache_read_tokens": 93891,
+        "cache_write_tokens": 0,
+        "response_id": "07464f05d7785ab04eddb1f51dd113cb",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-WpMfFeXVuAsJVWqyUoJEr3v3l9yZNNyTgfjo3KjeaLg"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-FgDlI5fCLzfYGq19lHunGrga9a2YHhfClyRCd11oAdk",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:17:47.158000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 98285,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 2142,
+        "output_tokens": 174,
+        "cache_read_tokens": 95969,
+        "cache_write_tokens": 0,
+        "response_id": "07464f0aa9f7383a3c69b8df17ca7c0b",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-FgDlI5fCLzfYGq19lHunGrga9a2YHhfClyRCd11oAdk"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-y0wb68Aa8K7QHABtyfZiRGRhM7GMQacFWC8i-NzEVk4",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:17:52.492000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 100464,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 2037,
+        "output_tokens": 316,
+        "cache_read_tokens": 98111,
+        "cache_write_tokens": 0,
+        "response_id": "07464f10b4479312b31f606787887f76",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-y0wb68Aa8K7QHABtyfZiRGRhM7GMQacFWC8i-NzEVk4"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-db7dSbcW3Wy0RfrDzD4uCK__apQYDNNTPFnCJ3-MW_A",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:17:57.785000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 101991,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 1597,
+        "output_tokens": 246,
+        "cache_read_tokens": 100148,
+        "cache_write_tokens": 0,
+        "response_id": "07464f155b9048a6b2040a7ed7095d8a",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-db7dSbcW3Wy0RfrDzD4uCK__apQYDNNTPFnCJ3-MW_A"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-Hxlk7vjE1gAUD77EwflcqBJ9lFXqZvXtvt9YAUV6TR8",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:18:01.943000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 105047,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 1340,
+        "output_tokens": 1962,
+        "cache_read_tokens": 101745,
+        "cache_write_tokens": 0,
+        "response_id": "07464f19a913fd432d89736efdf38f8b",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-Hxlk7vjE1gAUD77EwflcqBJ9lFXqZvXtvt9YAUV6TR8"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-AW7O9011Y-46qOvzFLoySzIKKZe9A3q9veaBWF7jOQs",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:18:15.655000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 107606,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 1978,
+        "output_tokens": 2543,
+        "cache_read_tokens": 103085,
+        "cache_write_tokens": 0,
+        "response_id": "07464f27038818c549f1a56667d4ad58",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-AW7O9011Y-46qOvzFLoySzIKKZe9A3q9veaBWF7jOQs"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-I1XjEg2v3yjaBxdRp1CsQ2lBwMdq1q7YO57cYiOkygs",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:18:36.289000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 108031,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 2804,
+        "output_tokens": 164,
+        "cache_read_tokens": 105063,
+        "cache_write_tokens": 0,
+        "response_id": "07464f3b63ae443e08fb792cc56ffeeb",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-I1XjEg2v3yjaBxdRp1CsQ2lBwMdq1q7YO57cYiOkygs"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-m6QwDXn0ZiAOX0_XtXiJ3vEMwCUbNpiKffA6JJ0tPPM",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:18:54.564000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 111287,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 211,
+        "output_tokens": 3209,
+        "cache_read_tokens": 107867,
+        "cache_write_tokens": 0,
+        "response_id": "07464f4eeef973d4bfd3a44f5b1862d2",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-m6QwDXn0ZiAOX0_XtXiJ3vEMwCUbNpiKffA6JJ0tPPM"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-iP4ZKI_dmzUzF7-c_BsB0pHmBZ_pKpBJZmh82RtrH9o",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:19:11.545000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 111910,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 3266,
+        "output_tokens": 566,
+        "cache_read_tokens": 108078,
+        "cache_write_tokens": 0,
+        "response_id": "07464f5f693cd791af37af4d649cc95f",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-iP4ZKI_dmzUzF7-c_BsB0pHmBZ_pKpBJZmh82RtrH9o"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-9ZIk9v1Guk_s5HvSIgBkLDjFJOuq1aJPvgs2ZTzVcM0",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:19:21.078000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 114058,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 1340,
+        "output_tokens": 1374,
+        "cache_read_tokens": 111344,
+        "cache_write_tokens": 0,
+        "response_id": "07464f688b2046649c6b6d5d368f7ad4",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-9ZIk9v1Guk_s5HvSIgBkLDjFJOuq1aJPvgs2ZTzVcM0"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-Ppjyc9pH4uA1Zzp1PLEYsZqLpTZS4qEZjH6x4ZeNtc8",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:19:36.259000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 116904,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 1462,
+        "output_tokens": 2758,
+        "cache_read_tokens": 112684,
+        "cache_write_tokens": 0,
+        "response_id": "07464f779dee12a60ab7b3a82ca42a9b",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-Ppjyc9pH4uA1Zzp1PLEYsZqLpTZS4qEZjH6x4ZeNtc8"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-6BvUdJ14VQloa_W1x15ubHQ7TKxKGxzHOlWhP5uo7P4",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:19:59.458000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 118547,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 3361,
+        "output_tokens": 1040,
+        "cache_read_tokens": 114146,
+        "cache_write_tokens": 0,
+        "response_id": "07464f8eb43fd53f30c703eef5820a69",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-6BvUdJ14VQloa_W1x15ubHQ7TKxKGxzHOlWhP5uo7P4"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-4iRiIcLGF_fgozC5M1z57hgZ83vhXlwiCRFC6zHnz1U",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:20:09.921000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 119341,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 1125,
+        "output_tokens": 709,
+        "cache_read_tokens": 117507,
+        "cache_write_tokens": 0,
+        "response_id": "07464f99ed9541561795c45d4796de05",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-4iRiIcLGF_fgozC5M1z57hgZ83vhXlwiCRFC6zHnz1U"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-mzuuQ4GEGhHdu0SAHlSNIaVM8SY4ixe1o8cLKPIfoiE",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:20:17.315000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 120266,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 1545,
+        "output_tokens": 89,
+        "cache_read_tokens": 118632,
+        "cache_write_tokens": 0,
+        "response_id": "07464fa0c7e53e75f904b70f48388772",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-mzuuQ4GEGhHdu0SAHlSNIaVM8SY4ixe1o8cLKPIfoiE"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-ZibcMNqmY8IqVDJ4gxJW9O4_8rSXKOKHYZrOFE-1ICA",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:20:20.539000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 138937,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 18660,
+        "output_tokens": 100,
+        "cache_read_tokens": 120177,
+        "cache_write_tokens": 0,
+        "response_id": "07464fa487cb295cf88aa8f4b4e4d35e",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-ZibcMNqmY8IqVDJ4gxJW9O4_8rSXKOKHYZrOFE-1ICA"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-q-PoAT48avlQHgYkQndAIalwzJT7xbCnjPJZle_9jGs",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:20:54.397000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 141822,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 147,
+        "output_tokens": 2838,
+        "cache_read_tokens": 138837,
+        "cache_write_tokens": 0,
+        "response_id": "07464fc616a33e402584c7541b8df62a",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-q-PoAT48avlQHgYkQndAIalwzJT7xbCnjPJZle_9jGs"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-ihjf5ZsNN96Rc7uPy7rTF8UsqffKeL1tUox9fH3rVY0",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:21:08.159000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 142623,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 2893,
+        "output_tokens": 746,
+        "cache_read_tokens": 138984,
+        "cache_write_tokens": 0,
+        "response_id": "07464fd3e0e7c737d964e5e9913a2659",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-ihjf5ZsNN96Rc7uPy7rTF8UsqffKeL1tUox9fH3rVY0"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-wUMETFuMB7SwOu2RlKHgD-s2OrV_XiFwnjpEhWEFk2w",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:21:14.146000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 142822,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 804,
+        "output_tokens": 141,
+        "cache_read_tokens": 141877,
+        "cache_write_tokens": 0,
+        "response_id": "07464fd9414c31fa587021f2aeba8f12",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-wUMETFuMB7SwOu2RlKHgD-s2OrV_XiFwnjpEhWEFk2w"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-LMLOxdeD6S56m3C3SUgbV0Nzki8GHzt5HPRy8SiVPzs",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:21:16.880000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 143185,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 199,
+        "output_tokens": 305,
+        "cache_read_tokens": 142681,
+        "cache_write_tokens": 0,
+        "response_id": "07464fdc963ecf80f269a3d9749dcb18",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-LMLOxdeD6S56m3C3SUgbV0Nzki8GHzt5HPRy8SiVPzs"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-A5xknYdeY_bWk3gqYujM9p83Wl36kF_38BeTorLNCQI",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:21:42.167000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 144181,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 664,
+        "output_tokens": 637,
+        "cache_read_tokens": 142880,
+        "cache_write_tokens": 0,
+        "response_id": "07464ff5cdbfcc4f6be1f3510e92f3af",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-A5xknYdeY_bWk3gqYujM9p83Wl36kF_38BeTorLNCQI"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-Tc242NEyna2mOSVgFNMroYJOkBBKKrE_zTCC7XUdBK8",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:21:52.276000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 146721,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 1420,
+        "output_tokens": 1757,
+        "cache_read_tokens": 143544,
+        "cache_write_tokens": 0,
+        "response_id": "07464fff534fb30f0fdb8f3a50a4e275",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-Tc242NEyna2mOSVgFNMroYJOkBBKKrE_zTCC7XUdBK8"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-X0WU-Ksd0LUHgc56HJWY7nz1b5cjOcQq4h1M4CDJ4y8",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:22:06.271000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 146913,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 1815,
+        "output_tokens": 134,
+        "cache_read_tokens": 144964,
+        "cache_write_tokens": 0,
+        "response_id": "0746500e7166118bd167767ecfb0093d",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-X0WU-Ksd0LUHgc56HJWY7nz1b5cjOcQq4h1M4CDJ4y8"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-piZrvqB5ZvnK5YIRKts2IKx3x3SBq6fA9eyoTyR3_-Q",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:22:09.154000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 147509,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 192,
+        "output_tokens": 538,
+        "cache_read_tokens": 146779,
+        "cache_write_tokens": 0,
+        "response_id": "07465010c4f2ca9feae6a0efdf6b8cf0",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-piZrvqB5ZvnK5YIRKts2IKx3x3SBq6fA9eyoTyR3_-Q"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-7c3omgICfibkGEUERFp4LdLA-xcyRh8mWcmpca_fXqo",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:22:13.252000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 147812,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 596,
+        "output_tokens": 245,
+        "cache_read_tokens": 146971,
+        "cache_write_tokens": 0,
+        "response_id": "07465015f006831cdd7ff8f22c67231a",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-7c3omgICfibkGEUERFp4LdLA-xcyRh8mWcmpca_fXqo"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-fQbrTaIpaeUepEtNkSHrhsBAJeSAtdksmNeNJEEsQJM",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:22:40.992000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 150554,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 2223,
+        "output_tokens": 764,
+        "cache_read_tokens": 147567,
+        "cache_write_tokens": 0,
+        "response_id": "07465030aa62de9bdaadf88bec9ef66e",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-fQbrTaIpaeUepEtNkSHrhsBAJeSAtdksmNeNJEEsQJM"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-Cjzp9zg52kSajSG6OE6chiHiRvEAk1qBdU6y3hQJJMU",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:22:47.291000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 150731,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 822,
+        "output_tokens": 119,
+        "cache_read_tokens": 149790,
+        "cache_write_tokens": 0,
+        "response_id": "07465036ab332fc6c6dea39a1ab63450",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-Cjzp9zg52kSajSG6OE6chiHiRvEAk1qBdU6y3hQJJMU"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-jyRt-qLHHjNWwuS3Cmm9aAL9_h944OvuTDALLmHoE78",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:22:50.091000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 151048,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 177,
+        "output_tokens": 259,
+        "cache_read_tokens": 150612,
+        "cache_write_tokens": 0,
+        "response_id": "0746503994f23bb049e639d644c183da",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-jyRt-qLHHjNWwuS3Cmm9aAL9_h944OvuTDALLmHoE78"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-WzGa9e_l9MO9ZPcJOXV-q-uqfEye5cJnrtwSY-YqhRM",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:23:16.153000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 152131,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 678,
+        "output_tokens": 664,
+        "cache_read_tokens": 150789,
+        "cache_write_tokens": 0,
+        "response_id": "07465053e82ef82526ecc52d96c16cd4",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-WzGa9e_l9MO9ZPcJOXV-q-uqfEye5cJnrtwSY-YqhRM"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-DL3Vibx9pL0gyGCfPTuRLdd3xVQUqU5k41kT8u5Fbl8",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:23:23.075000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 152363,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 722,
+        "output_tokens": 174,
+        "cache_read_tokens": 151467,
+        "cache_write_tokens": 0,
+        "response_id": "0746505a6108f6f1842b9feb6292416e",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-DL3Vibx9pL0gyGCfPTuRLdd3xVQUqU5k41kT8u5Fbl8"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-YFJWOxEsu2KL_MLOGQ_cpyI38zV1etMWVdIcfQbvws0",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:23:43.067000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 153200,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 544,
+        "output_tokens": 467,
+        "cache_read_tokens": 152189,
+        "cache_write_tokens": 0,
+        "response_id": "0746506e10d39c62f79410e2eabf4c7f",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-YFJWOxEsu2KL_MLOGQ_cpyI38zV1etMWVdIcfQbvws0"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-JxCY4QltCgibTaY0ELKG1pByuoYYOJEI7DMKik3mJ8U",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:23:48.897000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 154855,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 1887,
+        "output_tokens": 235,
+        "cache_read_tokens": 152733,
+        "cache_write_tokens": 0,
+        "response_id": "07465074aa44a4828cb8af879c3e11fa",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-JxCY4QltCgibTaY0ELKG1pByuoYYOJEI7DMKik3mJ8U"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-6wuTKr4kkcTrb-XymO2ljtIkjRZBbROgOOXtT1CXoeU",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:24:11.608000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 155470,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 545,
+        "output_tokens": 305,
+        "cache_read_tokens": 154620,
+        "cache_write_tokens": 0,
+        "response_id": "0746508b3b4a2318db2735619b01f911",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-6wuTKr4kkcTrb-XymO2ljtIkjRZBbROgOOXtT1CXoeU"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-bY_Rhp55e2dGDqLPul2hkiCLHqmd28uRHeS6zbFcdlI",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:24:15.817000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 155655,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 363,
+        "output_tokens": 127,
+        "cache_read_tokens": 155165,
+        "cache_write_tokens": 0,
+        "response_id": "0746508f0e32c07aa1842b16caa9afa9",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-bY_Rhp55e2dGDqLPul2hkiCLHqmd28uRHeS6zbFcdlI"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-RHVax-ga38nvh0fR-tL-4ZrAhCgYa9Hs6ySOOjycnS4",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:24:18.780000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 155924,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 185,
+        "output_tokens": 211,
+        "cache_read_tokens": 155528,
+        "cache_write_tokens": 0,
+        "response_id": "074650923e55c1e14550e31031127d9f",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-RHVax-ga38nvh0fR-tL-4ZrAhCgYa9Hs6ySOOjycnS4"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-ppy41ePo-z2xFiNdozzeaQYBzEO_Y9yrvFvWx4DEKhw",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:24:22.328000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 156156,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 269,
+        "output_tokens": 174,
+        "cache_read_tokens": 155713,
+        "cache_write_tokens": 0,
+        "response_id": "074650967aa9d8f095c9edd62c9027bb",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-ppy41ePo-z2xFiNdozzeaQYBzEO_Y9yrvFvWx4DEKhw"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-hAY-PZKiKE0oAtF7ek42xld2cNng1Y4Z7woB7gTZMIE",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:24:54.174000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 157368,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 923,
+        "output_tokens": 463,
+        "cache_read_tokens": 155982,
+        "cache_write_tokens": 0,
+        "response_id": "074650b61aa3c5c33964c469b086e3e7",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-hAY-PZKiKE0oAtF7ek42xld2cNng1Y4Z7woB7gTZMIE"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-2dKkdMjZbuhS4dT897W9bU3ZGJAoPbPyujfAoRGK8NU",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:24:58.858000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 157559,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 521,
+        "output_tokens": 133,
+        "cache_read_tokens": 156905,
+        "cache_write_tokens": 0,
+        "response_id": "074650baecac71eaa5a0809b06e0c131",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-2dKkdMjZbuhS4dT897W9bU3ZGJAoPbPyujfAoRGK8NU"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-3WLpDzXAc0lmgFA4CwpGk9DxAyQw8OrpC-FS9A-36lg",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:25:01.665000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 157668,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 191,
+        "output_tokens": 51,
+        "cache_read_tokens": 157426,
+        "cache_write_tokens": 0,
+        "response_id": "074650bd11f1f08be813a5c6cb8f182c",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-3WLpDzXAc0lmgFA4CwpGk9DxAyQw8OrpC-FS9A-36lg"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-l3_GmP6vIxDdybG1VRmqAm4SFYcCB_BjET1C4dWE8wg",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:25:04.493000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 159197,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 1239,
+        "output_tokens": 341,
+        "cache_read_tokens": 157617,
+        "cache_write_tokens": 0,
+        "response_id": "074650c0a77e33429611dfa59aa9e173",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-l3_GmP6vIxDdybG1VRmqAm4SFYcCB_BjET1C4dWE8wg"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-jnNayLxcaykgEmGPWN-rr2SAA8AJLlS74_rfh_dxCfE",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:25:18.471000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 160739,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 994,
+        "output_tokens": 889,
+        "cache_read_tokens": 158856,
+        "cache_write_tokens": 0,
+        "response_id": "074650d40d7d943824e446977bb052e7",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-jnNayLxcaykgEmGPWN-rr2SAA8AJLlS74_rfh_dxCfE"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-XICrrWC6fXa0Vkf9jyuiSWhFuf43292kJzsxchkpRFA",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:25:33.977000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 162220,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 1961,
+        "output_tokens": 409,
+        "cache_read_tokens": 159850,
+        "cache_write_tokens": 0,
+        "response_id": "074650e399f41dbf4814280713df7e9b",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-XICrrWC6fXa0Vkf9jyuiSWhFuf43292kJzsxchkpRFA"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-fadBNCfTVxuNG5yQnP2m4hHYWhdt6yQGG5JPWwCmsfs",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:25:45.730000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 162502,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 495,
+        "output_tokens": 196,
+        "cache_read_tokens": 161811,
+        "cache_write_tokens": 0,
+        "response_id": "074650f0cd40e5ebe66936a0390a9a33",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-fadBNCfTVxuNG5yQnP2m4hHYWhdt6yQGG5JPWwCmsfs"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-0JpGC4NJY1FuQ1ZeWc8tz54oRQcP4KZH73QGDErtCKc",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:26:58.218000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 163287,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 455,
+        "output_tokens": 526,
+        "cache_read_tokens": 162306,
+        "cache_write_tokens": 0,
+        "response_id": "074651380c21d17a09be94583ccd84b7",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-0JpGC4NJY1FuQ1ZeWc8tz54oRQcP4KZH73QGDErtCKc"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-4ggKpyaB5TiGxUX16PJNkw1KJ6ZLFbOKetK8bTnNt_0",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:27:20.390000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 163472,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 564,
+        "output_tokens": 147,
+        "cache_read_tokens": 162761,
+        "cache_write_tokens": 0,
+        "response_id": "0746514ea47dfd21eef257dcebdcfcbf",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-4ggKpyaB5TiGxUX16PJNkw1KJ6ZLFbOKetK8bTnNt_0"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-MwA5FgBkG_TT8dSlnA0fjMA1QUE7hw2ZcaxntKp5EjQ",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:27:44.254000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 163958,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 420,
+        "output_tokens": 213,
+        "cache_read_tokens": 163325,
+        "cache_write_tokens": 0,
+        "response_id": "074651661bd44a5642cd7799526956bc",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-MwA5FgBkG_TT8dSlnA0fjMA1QUE7hw2ZcaxntKp5EjQ"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-BXoXU97XJm8irclk4R3v73jTLKdrVcw37j-SulX9c44",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:28:27.772000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 164215,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 384,
+        "output_tokens": 86,
+        "cache_read_tokens": 163745,
+        "cache_write_tokens": 0,
+        "response_id": "0746518f94e0c87d65e369d18bacb53e",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-BXoXU97XJm8irclk4R3v73jTLKdrVcw37j-SulX9c44"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-1DO3WFImhTQeDHJqRfLnyIoLiK93ccPPu0VYtwGOXgA",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:28:35.383000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 173615,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 8553,
+        "output_tokens": 933,
+        "cache_read_tokens": 164129,
+        "cache_write_tokens": 0,
+        "response_id": "0746519aff7dde74566311d7724a2b79",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-1DO3WFImhTQeDHJqRfLnyIoLiK93ccPPu0VYtwGOXgA"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-EPwGMg26hCwiVFaifoMCgZtTPLV2MRTUlwEUfSDgLcU",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:28:51.933000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 187380,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 14180,
+        "output_tokens": 518,
+        "cache_read_tokens": 172682,
+        "cache_write_tokens": 0,
+        "response_id": "074651ab75c7fec00bd0fe275a6a1349",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-EPwGMg26hCwiVFaifoMCgZtTPLV2MRTUlwEUfSDgLcU"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-XavUsHn5IblV4j9diB-ysbIpyhzI4rR_UKWW4lAYLZ8",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "delivery",
+        "time": "2026-11-13T22:29:56.464000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 188365,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 1060,
+        "output_tokens": 443,
+        "cache_read_tokens": 186862,
+        "cache_write_tokens": 0,
+        "response_id": "074651eac185e807fc7995ddfe9f4c14",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-XavUsHn5IblV4j9diB-ysbIpyhzI4rR_UKWW4lAYLZ8"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-Kxgk9JqQobMVPhE4ppmlIZDlChNh5RSbalA4iU8nDr0",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "testing",
+        "time": "2026-11-13T22:30:07.372000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 188789,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 501,
+        "output_tokens": 366,
+        "cache_read_tokens": 187922,
+        "cache_write_tokens": 0,
+        "response_id": "074651f63cfede236ff4921a8a56e7bb",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-Kxgk9JqQobMVPhE4ppmlIZDlChNh5RSbalA4iU8nDr0"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-9SIFiTBsOIhkG9TRWotcTnXxJd1jiqps6A_LyJeYaiY",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "testing",
+        "time": "2026-11-13T22:30:20.199000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 191039,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 769,
+        "output_tokens": 1847,
+        "cache_read_tokens": 188423,
+        "cache_write_tokens": 0,
+        "response_id": "07465203afbaf9b4c2cdae1a20bacf96",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-9SIFiTBsOIhkG9TRWotcTnXxJd1jiqps6A_LyJeYaiY"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-8E77cHZEHD8yd4C0YfOC7P7ydfkPbVG_Etc0P8jbAIM",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "testing",
+        "time": "2026-11-13T22:30:41.832000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 194232,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 1864,
+        "output_tokens": 3176,
+        "cache_read_tokens": 189192,
+        "cache_write_tokens": 0,
+        "response_id": "0746521998c69e69b83c3299a215bab3",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-8E77cHZEHD8yd4C0YfOC7P7ydfkPbVG_Etc0P8jbAIM"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-ke-ZkuTyIMw2hcdEbn9V02lxITX-cbpdgolW9BrzlLk",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "testing",
+        "time": "2026-11-13T22:31:11.513000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 196151,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 3439,
+        "output_tokens": 1656,
+        "cache_read_tokens": 191056,
+        "cache_write_tokens": 0,
+        "response_id": "074652377e99e1f2a06342ca826d78ce",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-ke-ZkuTyIMw2hcdEbn9V02lxITX-cbpdgolW9BrzlLk"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-WuFfNboCeVKSqPWY28bzgsiXtF1wYrY7jSM3_sQKQQo",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "testing",
+        "time": "2026-11-13T22:31:32.742000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 196616,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 1798,
+        "output_tokens": 323,
+        "cache_read_tokens": 194495,
+        "cache_write_tokens": 0,
+        "response_id": "0746524c5bda2ab0d326723937eb541a",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-WuFfNboCeVKSqPWY28bzgsiXtF1wYrY7jSM3_sQKQQo"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-t09qwxSDpnOra_AHhpCEXxwateYVet_0o3R7xAiNKbM",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "testing",
+        "time": "2026-11-13T22:31:55.630000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 197814,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 579,
+        "output_tokens": 942,
+        "cache_read_tokens": 196293,
+        "cache_write_tokens": 0,
+        "response_id": "07465263f5c2ac3e5cad921005f0bdff",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-t09qwxSDpnOra_AHhpCEXxwateYVet_0o3R7xAiNKbM"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-V6UAI5UtkbLRIeHjjnxmLGKfk4Ca3F68p3PvELf2-fo",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "testing",
+        "time": "2026-11-13T22:32:23.522000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 209890,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 10949,
+        "output_tokens": 2069,
+        "cache_read_tokens": 196872,
+        "cache_write_tokens": 0,
+        "response_id": "0746527dd32ff5d2c2744e10be79a701",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-V6UAI5UtkbLRIeHjjnxmLGKfk4Ca3F68p3PvELf2-fo"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-D21lJ-HRNoUO7PruK_s2n2sWxDfoztspM_aX9XqFna4",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "testing",
+        "time": "2026-11-13T22:32:43.850000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 210122,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 2121,
+        "output_tokens": 180,
+        "cache_read_tokens": 207821,
+        "cache_write_tokens": 0,
+        "response_id": "0746528bfe7d8518f564bfb5766620ac",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-D21lJ-HRNoUO7PruK_s2n2sWxDfoztspM_aX9XqFna4"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-VN2KEJ5-oYzfq-0nUiMnrjaS5dpiH_g7kQxo9Ogbp5I",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "testing",
+        "time": "2026-11-13T22:32:48.631000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 210447,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 227,
+        "output_tokens": 278,
+        "cache_read_tokens": 209942,
+        "cache_write_tokens": 0,
+        "response_id": "074652906b40be67e64ec45f9fd15e97",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-VN2KEJ5-oYzfq-0nUiMnrjaS5dpiH_g7kQxo9Ogbp5I"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-3pj2L6SHwWsog5SCjlywF9XlABWT5IBzE4zZ-_udEHM",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "testing",
+        "time": "2026-11-13T22:32:54.120000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 210812,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 410,
+        "output_tokens": 233,
+        "cache_read_tokens": 210169,
+        "cache_write_tokens": 0,
+        "response_id": "074652950d68eb62886c0089efb89168",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-3pj2L6SHwWsog5SCjlywF9XlABWT5IBzE4zZ-_udEHM"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-HWFa_lrsGG0I-WNqhdz1U_4apaunF2AFBtAA-LwS3e8",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "testing",
+        "time": "2026-11-13T22:32:58.664000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 211511,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 358,
+        "output_tokens": 574,
+        "cache_read_tokens": 210579,
+        "cache_write_tokens": 0,
+        "response_id": "0746529a1f44b3690434cdfe293ea338",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-HWFa_lrsGG0I-WNqhdz1U_4apaunF2AFBtAA-LwS3e8"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-cLiExYQdihqYoQKeDJ5IrSfhmP8wnoPU61Y6wKzvX2A",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "testing",
+        "time": "2026-11-13T22:33:04.835000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 211739,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 627,
+        "output_tokens": 175,
+        "cache_read_tokens": 210937,
+        "cache_write_tokens": 0,
+        "response_id": "074652a0088d82c1e9200fdc254ff191",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-cLiExYQdihqYoQKeDJ5IrSfhmP8wnoPU61Y6wKzvX2A"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-N1rNZgyU1ZlEQ9nxdZJReGmIByFI2mRUVWCRrpd-DfA",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "testing",
+        "time": "2026-11-13T22:33:09.981000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 212361,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 617,
+        "output_tokens": 180,
+        "cache_read_tokens": 211564,
+        "cache_write_tokens": 0,
+        "response_id": "074652a59738e2163da75799ea7311c1",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-N1rNZgyU1ZlEQ9nxdZJReGmIByFI2mRUVWCRrpd-DfA"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-3GEpiXLz0I2uN6z47l_80QT1QvhiWsy2DTrjs53Xc2Q",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "testing",
+        "time": "2026-11-13T22:33:14.499000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 212796,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 245,
+        "output_tokens": 370,
+        "cache_read_tokens": 212181,
+        "cache_write_tokens": 0,
+        "response_id": "074652aa4220c2d1fe0c786b69372f63",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-3GEpiXLz0I2uN6z47l_80QT1QvhiWsy2DTrjs53Xc2Q"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-XkUzzczUDVrlTM_ceQE9EAv7DXR2IfGbjIMoQ7izP8E",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "testing",
+        "time": "2026-11-13T22:33:20.090000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 213166,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 419,
+        "output_tokens": 321,
+        "cache_read_tokens": 212426,
+        "cache_write_tokens": 0,
+        "response_id": "074652b0c9bcff319591ad6e9027ba22",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-XkUzzczUDVrlTM_ceQE9EAv7DXR2IfGbjIMoQ7izP8E"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-msgqWO1EXZUbcK0KimViLLvRi86GwM0ekq_2wkdmzSQ",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "testing",
+        "time": "2026-11-13T22:33:25.480000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 213736,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 506,
+        "output_tokens": 385,
+        "cache_read_tokens": 212845,
+        "cache_write_tokens": 0,
+        "response_id": "074652b54fcacea1985c554239cfd513",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-msgqWO1EXZUbcK0KimViLLvRi86GwM0ekq_2wkdmzSQ"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-E-WUaRS_vBwXLuHLkMc-9qr3IzJ490fI8OoFOZXG6y8",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "testing",
+        "time": "2026-11-13T22:33:31.447000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 214230,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 559,
+        "output_tokens": 320,
+        "cache_read_tokens": 213351,
+        "cache_write_tokens": 0,
+        "response_id": "074652bbeb9c2ac67db88855ca693339",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-E-WUaRS_vBwXLuHLkMc-9qr3IzJ490fI8OoFOZXG6y8"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-5ZrVI2incLvSU7vbRgN3_JRBJbikbSkm0UnMG2i2W6Y",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "testing",
+        "time": "2026-11-13T22:33:37.101000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 215234,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 1081,
+        "output_tokens": 243,
+        "cache_read_tokens": 213910,
+        "cache_write_tokens": 0,
+        "response_id": "074652c067334002172a6a31bcf1b2b8",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-5ZrVI2incLvSU7vbRgN3_JRBJbikbSkm0UnMG2i2W6Y"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-YzrtMqWRIdhJIbhT5II5Cjj_qnD6Diag95rMybSEP68",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "testing",
+        "time": "2026-11-13T22:33:40.968000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 215585,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 296,
+        "output_tokens": 298,
+        "cache_read_tokens": 214991,
+        "cache_write_tokens": 0,
+        "response_id": "074652c422685d79aad3dab2fcbabd02",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-YzrtMqWRIdhJIbhT5II5Cjj_qnD6Diag95rMybSEP68"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-bESILffLhCz5DJnjhTXAEyVvGK85WvWXxkSm3xtH7WI",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "testing",
+        "time": "2026-11-13T22:33:45.119000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 215949,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 351,
+        "output_tokens": 311,
+        "cache_read_tokens": 215287,
+        "cache_write_tokens": 0,
+        "response_id": "074652c9e7af1bc4cbfd97faa1ec7766",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-bESILffLhCz5DJnjhTXAEyVvGK85WvWXxkSm3xtH7WI"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-RDcxuZ3an-z4JUO0KReWMpCNd7Y5gRX4WM1Mu9j5ong",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "testing",
+        "time": "2026-11-13T22:33:49.048000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 216158,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 364,
+        "output_tokens": 156,
+        "cache_read_tokens": 215638,
+        "cache_write_tokens": 0,
+        "response_id": "074652cca75ca397368f03e96d9d11f2",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-RDcxuZ3an-z4JUO0KReWMpCNd7Y5gRX4WM1Mu9j5ong"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-Swy1W2cD1RcPt_Lfu2jJ8xrju8VSPNkBeeNQ-JD6vSU",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "testing",
+        "time": "2026-11-13T22:33:53.766000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 216717,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 227,
+        "output_tokens": 488,
+        "cache_read_tokens": 216002,
+        "cache_write_tokens": 0,
+        "response_id": "074652d1b64a3dedcadab7d392b8c38e",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-Swy1W2cD1RcPt_Lfu2jJ8xrju8VSPNkBeeNQ-JD6vSU"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-9bHp1SGyKD4j8-n2M7hSMiksRHXXG2dlcUkCZ94Bd2c",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "testing",
+        "time": "2026-11-13T22:33:59.185000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 216945,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 542,
+        "output_tokens": 174,
+        "cache_read_tokens": 216229,
+        "cache_write_tokens": 0,
+        "response_id": "074652d6881aa3a087ab2b253c42edd0",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-9bHp1SGyKD4j8-n2M7hSMiksRHXXG2dlcUkCZ94Bd2c"
+        ]
+      },
+      {
+        "provider": "minimax",
+        "request_id": "msg-dTn2MzlAmvYjd-uLViBndHRRXoaREnmRaigvfksrYJI",
+        "session": "mvs_11e0ec75a31b47f2a6d760f58ea956b9",
+        "agent": "main-session",
+        "model": "MiniMax-M3.1-Flash",
+        "stage": "testing",
+        "time": "2026-11-13T22:34:02.665000+08:00",
+        "definition": "provider usage.totalTokens（官方口径，含 input/output/cacheRead/cacheWrite）",
+        "total_tokens": 217222,
+        "included": true,
+        "evidence": [
+          "E-TOKEN-01"
+        ],
+        "input_tokens": 227,
+        "output_tokens": 224,
+        "cache_read_tokens": 216771,
+        "cache_write_tokens": 0,
+        "response_id": "074652da75d6abcf0f663bb124c9e62e",
+        "source_pointer": [
+          "会话归档 messages.jsonl message_id=msg-dTn2MzlAmvYjd-uLViBndHRRXoaREnmRaigvfksrYJI"
+        ]
+      }
+    ],
+    "waste": []
+  }
+}

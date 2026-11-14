@@ -146,7 +146,6 @@ ISSUES = [
         "evidence": ["E-GIT-02"],
         "deductions": [
             {"check_id": "06-B4-03", "axis": "status", "independent_impact": "编号未核验，提交不算完整合规提交"},
-            {"check_id": "06-B4-02", "axis": "quality", "independent_impact": "占位编号使提交与工作项的追溯链不完整"},
         ],
     },
     {
@@ -154,16 +153,17 @@ ISSUES = [
         "root_cause": "提交消息中的工作项编号为占位符，与真实工作项缺少可核验的关联",
         "fact": "提交消息格式 [类型] [版本号] [编号] 中文描述 合规，但编号位是 #TBD",
         "source": "题面共同要求第 9 节提交消息规范",
-        "impact": "评审者无法从提交反查工作项，影响 B4-02 的阶段历史可追溯质量",
+        "impact": "评审者无法从提交反查工作项，影响 B4-03 的提交可追溯质量",
         "fix": "核验通过后改写 feat/fix 提交消息，并在 docs/10 登记核验记录",
         "retest": "核验后复查 git log 消息格式",
+        "history": "初次记录；编号核验通过后按新周期复验，并改写 feat/fix 提交消息后关闭。",
         "deduction_basis": "质量轴：可追溯链不完整",
         "deduplication": "不重复 ISS-01 的状态缺口，只扣质量",
         "certainty": "confirmed",
         "owner": "student",
         "evidence": ["E-GIT-02"],
         "deductions": [
-            {"check_id": "06-B4-02", "axis": "quality", "independent_impact": "提交与工作项缺少可核验关联"},
+            {"check_id": "06-B4-03", "axis": "quality", "independent_impact": "提交与工作项缺少可核验关联"},
         ],
     },
     {
@@ -174,6 +174,7 @@ ISSUES = [
         "impact": "A3-06 的「适用并发/竞争检测」只完成功能级验证",
         "fix": "以 CI 的 -race 实际运行记录补证",
         "retest": "CI 流水线运行成功后核对运行记录中的 -race 步骤结论",
+        "history": "初次记录；CI 流水线给出 go test -race 实际运行结论后复验并关闭。",
         "deduction_basis": "质量轴：缺少竞态检测的直接证据",
         "deduplication": "与 ISS-01 无关，属环境能力缺口",
         "certainty": "confirmed",
@@ -191,6 +192,7 @@ ISSUES = [
         "impact": "A4-06 的「上线地址可访问」只在本机/运行器内成立",
         "fix": "配置 DEPLOY_TARGET 与 DEPLOY_TOKEN 后由流水线重新发布到常驻环境",
         "retest": "重新部署后从外部访问该地址并复跑冒烟",
+        "history": "初次记录；接入常驻验收环境并复跑冒烟后复验并关闭。",
         "deduction_basis": "质量轴：部署形态受限",
         "deduplication": "与人工交付物缺口（视频、群提交）无关",
         "certainty": "confirmed",
@@ -208,6 +210,7 @@ ISSUES = [
         "impact": "源提交与远端提交无法按 SHA 直接相等比对，只能按 tree SHA 关联",
         "fix": "以 tree SHA 映射表作为关联依据并在文档中固定说明；若需 SHA 完全一致，可统一以 UTC 偏移重建提交历史",
         "retest": "复跑推送脚本核对映射表中 tree_equal 全为 true",
+        "history": "初次记录；每次推送均归档 tree SHA 映射表，核对无偏差后关闭。",
         "deduction_basis": "质量轴：版本关联需借助映射而非 SHA 相等",
         "deduplication": "与 ISS-01 的编号核验问题不同",
         "certainty": "confirmed",
@@ -225,6 +228,7 @@ ISSUES = [
         "impact": "B2-03 的「全量会话、回复、工具结果」只能按摘要级追溯",
         "fix": "如需逐字原文，可另行导出原始会话快照（本仓库保留结构化底账 + 快照目录指引）",
         "retest": "抽查 5 条事件能从提示追到实现与验证",
+        "history": "初次记录；补齐逐字原文导出后抽查追溯并关闭。",
         "deduction_basis": "质量轴：追溯粒度为摘要级",
         "deduplication": "与 ISS-02 的编号问题不同",
         "certainty": "confirmed",
@@ -241,9 +245,10 @@ ISSUES = [
         "root_cause": "缺陷修复后以功能级回归与场景脚本复检为主，边界组合未穷举",
         "fact": "9 条缺陷均有对应回归用例，但未对每个修复点做属性测试或穷举组合",
         "source": "evidence/defect-fix-round1*.md 的复检清单",
-        "impact": "A1-07/A1-12/A1-13/A2-02/A2-04 等项的残余风险高于 excellent",
+        "impact": "A1-07/A1-12/A1-13/A2-02/A2-03/A2-04 等项的残余风险高于 excellent",
         "fix": "如需更高置信度，可补充状态机的属性测试（随机状态迁移序列）",
         "retest": "补充属性测试后重跑覆盖率门禁与场景脚本",
+        "history": "初次记录；补齐状态机属性测试后重跑门禁与场景脚本并关闭。",
         "deduction_basis": "质量轴：回归充分但未穷举",
         "deduplication": "与 ISS-03 的环境缺口无关",
         "certainty": "confirmed",
@@ -254,6 +259,7 @@ ISSUES = [
             {"check_id": "06-A1-12", "axis": "quality", "independent_impact": "巡检分支未穷举时间序列"},
             {"check_id": "06-A1-13", "axis": "quality", "independent_impact": "并发组合未穷举"},
             {"check_id": "06-A2-02", "axis": "quality", "independent_impact": "状态迁移未做属性测试"},
+            {"check_id": "06-A2-03", "axis": "quality", "independent_impact": "资源守恒边界（次数上限、时间窗、候选数量）仅功能级验证，未穷举边界组合"},
             {"check_id": "06-A2-04", "axis": "quality", "independent_impact": "幂等与并发未做属性测试"},
         ],
     },
@@ -265,6 +271,7 @@ ISSUES = [
         "impact": "A4-05/A4-07 的流水线与回退验证依赖运行器环境",
         "fix": "配置常驻验收环境后重跑流水线并复验回退步骤",
         "retest": "在常驻环境重跑流水线并核对回退命令",
+        "history": "初次记录；在常驻环境重跑流水线并实测回退后复验并关闭。",
         "deduction_basis": "质量轴：部署形态受限",
         "deduplication": "与 ISS-04 相关但归因不同：ISS-04 是地址形态，ISS-08 是流水线可在性验证范围",
         "certainty": "confirmed",
@@ -283,6 +290,7 @@ ISSUES = [
         "impact": "B1-02/B1-03 的检查点质量依赖人工维护的准确性",
         "fix": "如需更强约束，可把阶段门禁写成可执行脚本并纳入流水线",
         "retest": "补充门禁脚本后重跑流水线核对阶段顺序",
+        "history": "初次记录；阶段门禁脚本化并纳入流水线后复验并关闭。",
         "deduction_basis": "质量轴：检查点依赖人工维护",
         "deduplication": "与 ISS-08 的流水线部署形态无关",
         "certainty": "confirmed",
@@ -301,6 +309,7 @@ ISSUES = [
         "impact": "B3-01/B3-02/B3-03 的判定覆盖面有限，仍需人工与独立 Agent 复核",
         "fix": "继续把新发现的语义缺口转成脚本判据（已对 R2-01、泄密扫描、覆盖率复算做过三轮增强）",
         "retest": "每轮增强后重跑两个 Skill 并保留复检输出",
+        "history": "初次记录；每轮判据增强后重跑两个 Skill 并保留复检输出后关闭。",
         "deduction_basis": "质量轴：判定覆盖面有限",
         "deduplication": "与 ISS-06 的会话追溯粒度不同",
         "certainty": "confirmed",
@@ -386,6 +395,13 @@ def build(repo: Path, skill_root: Path, out_dir: Path) -> int:
 
     # ---------- token ----------
     requests = ledger.get("requests", [])
+    # 台账原始 evidence 是「取证位置描述」，不是报告证据编号；
+    # 报告契约要求每条证据引用都能解析到已登记证据，故统一挂到 E-TOKEN-01，
+    # 原始取证位置保留在 source_pointer 中，不丢失可追溯性。
+    for row in requests:
+        pointer = row.get("evidence")
+        row["source_pointer"] = pointer
+        row["evidence"] = ["E-TOKEN-01"]
     token_usage = {
         "verified": bool(requests),
         "complete": bool(requests),
