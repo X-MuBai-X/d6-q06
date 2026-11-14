@@ -31,6 +31,16 @@ SECRET_PATTERNS = [
     (re.compile(r"(?i)(?:api[_-]?key|secret)\s*[:=]\s*[\"']?[A-Za-z0-9\-_]{12,}"), "密钥"),
     (re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"), "私钥"),
     (re.compile(r"(?i)(?:cookie|set-cookie)\s*[:=]\s*[\"']?(?!\*)[A-Za-z0-9\-_]{16,}"), "Cookie 值"),
+    # 独立验收 L-1 教训：只覆盖 GitHub 系列形态会漏掉其它厂商的令牌形态，
+    # 这里补齐常见第三方令牌前缀（仍然不使用白名单或例外目录）。
+    (re.compile(r"sk-(?:live|test)-[A-Za-z0-9\-_]{16,}"), "第三方 Live/Test 密钥"),
+    (re.compile(r"glpat-[A-Za-z0-9\-_]{16,}"), "GitLab PAT"),
+    (re.compile(r"xox[baprs]-[A-Za-z0-9-]{10,}"), "Slack 令牌"),
+    (re.compile(r"AKIA[0-9A-Z]{16}"), "AWS Access Key ID"),
+    (re.compile(r"npm_[A-Za-z0-9]{20,}"), "npm 令牌"),
+    (re.compile(r"AIza[0-9A-Za-z\-_]{30,}"), "Google API Key"),
+    (re.compile(r"-----BEGIN OPENSSH PRIVATE KEY-----"), "SSH 私钥"),
+    (re.compile(r"(?i)(?:token|令牌)\s*[:=]\s*[\"']?(?!\*)[A-Za-z0-9\-_.]{16,}"), "明文令牌"),
 ]
 
 # 已知凭据值的唯一来源：cmd/server/main.go
@@ -191,6 +201,35 @@ def run(cmd: list[str], cwd: pathlib.Path) -> tuple[int, str]:
     return proc.returncode, (proc.stdout or "") + (proc.stderr or "")
 
 
+def newest_source_mtime(repo: pathlib.Path) -> float:
+    """仓库内最新的 .go / .sql / 流水线配置文件的修改时间。"""
+    newest = 0.0
+    for rel_root in ("internal", "cmd", "scripts"):
+        base = repo / rel_root
+        if not base.exists():
+            continue
+        for path in base.rglob("*"):
+            if path.is_file() and path.suffix in (".go", ".sql", ".sh", ".py"):
+                newest = max(newest, path.stat().st_mtime)
+    workflow = repo / ".github" / "workflows" / "ci.yml"
+    if workflow.exists():
+        newest = max(newest, workflow.stat().st_mtime)
+    return newest
+
+
+def stale_against_sources(repo: pathlib.Path, evidence_path: pathlib.Path) -> str:
+    """证据文件是否早于最新源码；是则返回原因描述，否则返回空字符串。
+
+    独立验收 L-3 教训：只读既有结论文件属于自证循环，必须确认结论不是旧版本留下的。
+    """
+    if not evidence_path.exists():
+        return ""
+    newest = newest_source_mtime(repo)
+    if newest and evidence_path.stat().st_mtime < newest:
+        return f"证据文件时间 {evidence_path.stat().st_mtime:.0f} < 最新源码时间 {newest:.0f}"
+    return ""
+
+
 def check_business_rules(ck: Checker, repo: pathlib.Path) -> None:
     rules = read(repo, "internal/domain/rules.go")
     service = read(repo, "internal/service/requirement.go")
@@ -208,15 +247,33 @@ def check_business_rules(ck: Checker, repo: pathlib.Path) -> None:
                 "未找到描述快照写入逻辑", "补充 DescriptionSnapshot 写入并补单测")
 
     # R2 幂等与唯一处理中任务
-    has_unique_index = "idx_one_processing_task" in schema and "idx_task_request_no" in schema
+    # 独立验收 L-2 教训：只做「字符串存在性匹配」无法区分「复合唯一索引」与
+    # 「只留下一句 DROP INDEX 的残留」，也无法识别跨需求串号。这里改为按语义判定：
+    #   (a) 存在针对 (requirement_id, request_no) 的**复合唯一索引**；
+    #   (b) 幂等命中时校验了需求归属（跨需求复用必须被拒绝）。
+    composite_index = re.search(
+        r"CREATE\s+UNIQUE\s+INDEX[^;]*\(\s*requirement_id\s*,\s*request_no\s*\)", schema, re.I | re.S) is not None
+    processing_index = "idx_one_processing_task" in schema
+    scope_check = bool(re.search(r"RequirementID\s*!=\s*requirementID", service)) or \
+        bool(re.search(r"existing\.RequirementID", service))
     has_idempotent = "GetTaskByRequestNoTx" in service
-    if has_unique_index and has_idempotent:
+    if composite_index and processing_index and scope_check and has_idempotent:
         ck.ok("R2-01", "业务规则", "R2", "同一需求至多一个处理中任务且请求编号幂等",
               f"internal/store/schema.sql {line_of(schema, 'idx_one_processing_task')}；"
-              f"internal/service/requirement.go {line_of(service, 'GetTaskByRequestNoTx')}")
+              f"internal/service/requirement.go {line_of(service, 'GetTaskByRequestNoTx')}；"
+              "已校验 (requirement_id, request_no) 复合唯一索引与幂等命中的需求归属")
     else:
+        missing = []
+        if not composite_index:
+            missing.append("internal/store/schema.sql 缺少 (requirement_id, request_no) 复合唯一索引")
+        if not processing_index:
+            missing.append("internal/store/schema.sql 缺少处理中任务唯一索引")
+        if not scope_check:
+            missing.append("internal/service/requirement.go 的幂等命中未校验需求归属（跨需求串号风险）")
+        if not has_idempotent:
+            missing.append("internal/service/requirement.go 缺少幂等分支")
         ck.fail("R2-01", "业务规则", "R2", "同一需求至多一个处理中任务且请求编号幂等",
-                "缺少唯一索引或幂等分支", "补唯一索引与幂等判定")
+                "；".join(missing), "补复合唯一索引、幂等归属校验与处理中任务唯一约束")
 
     # R3 次数上限与超时
     max_ok = re.search(r"MaxAttempts\s*=\s*3", rules) is not None
@@ -394,22 +451,44 @@ def check_common_requirements(ck: Checker, repo: pathlib.Path, min_cov: float, s
                 "skill-usage.md 缺少自编 Skill 的登记", "补齐 skill-usage.md 六列表")
 
     # 覆盖率
+    # 独立验收 L-3 教训：只读既有结论文件属于「自证循环」。这里改为**复算**：
+    # 用仓库自带的唯一口径脚本从原始剖面重新计算，并检查剖面是否比源码旧（过期即待补证）。
     summary = read(repo, "evidence/coverage-summary.txt")
-    if "结论】PASS" in summary:
+    profile_path = repo / "evidence" / "coverage.out"
+    stale_reason = stale_against_sources(repo, profile_path)
+    recomputed = None
+    if profile_path.exists() and not stale_reason:
+        code, output = run([sys.executable, "scripts/coverage_gate.py", "--root", ".",
+                            "--out-dir", "evidence", "--min", "85", "--skip-tests"], repo)
+        if code == 0 and "PASS" in read(repo, "evidence/coverage-summary.txt"):
+            recomputed = True
+        else:
+            recomputed = False
+    if recomputed:
         ck.ok("C-08", "共同要求", "§6.1", "单元测试语句覆盖率整体与各核心包均达标",
-              "evidence/coverage-summary.txt 结论为 PASS")
-    elif summary:
+              "按 scripts/coverage_gate.py 从原始剖面复算，结论为 PASS（剖面不早于源码）")
+    elif stale_reason:
+        ck.pending("C-08", "共同要求", "§6.1", "单元测试语句覆盖率整体与各核心包均达标",
+                   f"覆盖率剖面早于最新源码（{stale_reason}），结论可能过期",
+                   "重跑 python scripts/coverage_gate.py --root . --out-dir evidence --min 85")
+    elif recomputed is False:
         ck.fail("C-08", "共同要求", "§6.1", "单元测试语句覆盖率整体与各核心包均达标",
-                "evidence/coverage-summary.txt 结论不是 PASS", "补足覆盖率后重跑 scripts/coverage_gate.py")
+                "按 scripts/coverage_gate.py 从原始剖面复算未通过", "补足覆盖率后重跑 scripts/coverage_gate.py")
     else:
         ck.pending("C-08", "共同要求", "§6.1", "单元测试语句覆盖率整体与各核心包均达标",
-                   "未找到 evidence/coverage-summary.txt", "执行 python scripts/coverage_gate.py --root . --out-dir evidence")
+                   "未找到 evidence/coverage.out", "执行 python scripts/coverage_gate.py --root . --out-dir evidence")
 
-    # 场景验证
+    # 场景验证：同样避免「自证循环」——日志必须不早于最新源码，否则结论可能已过期。
     scenario_log = read(repo, "evidence/scenario-verify.log")
-    if scenario_log and "失败 0 项" in scenario_log:
+    scenario_path = repo / "evidence" / "scenario-verify.log"
+    scenario_stale = stale_against_sources(repo, scenario_path)
+    if scenario_log and "失败 0 项" in scenario_log and not scenario_stale:
         ck.ok("C-09", "共同要求", "§2/§10", "五组完整工作场景实测通过",
-              "evidence/scenario-verify.log 显示全部场景断言通过")
+              "evidence/scenario-verify.log 显示全部场景断言通过（日志不早于最新源码）")
+    elif scenario_log and scenario_stale:
+        ck.pending("C-09", "共同要求", "§2/§10", "五组完整工作场景实测通过",
+                   f"场景日志早于最新源码（{scenario_stale}），结论可能过期",
+                   "重跑 python scripts/verify_scenarios.py 并归档输出")
     elif scenario_log:
         ck.fail("C-09", "共同要求", "§2/§10", "五组完整工作场景实测通过",
                 "场景验证日志中存在失败项", "修复后重跑 scripts/verify_scenarios.py")

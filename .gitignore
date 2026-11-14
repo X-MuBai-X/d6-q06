@@ -7,3 +7,4 @@ logs/
 *.db-wal
 __pycache__/
 *.pyc
+evidence/.coverpkg/

@@ -1,0 +1,321 @@
+﻿2026-11-14T00:39:32.8508889Z Current runner version: '2.338.2'
+2026-11-14T00:39:32.8545413Z ##[group]Runner Image Provisioner
+2026-11-14T00:39:32.8547003Z Hosted Compute Agent
+2026-11-14T00:39:32.8548168Z Version: 20261103.629
+2026-11-14T00:39:32.8549355Z Commit: 15dbd9ccb5dbf34fae002b6ed1a2670f52df37bc
+2026-11-14T00:39:32.8550706Z Build Date: 2026-11-03T17:26:59Z
+2026-11-14T00:39:32.8552036Z Worker ID: {274fdbd7-94c5-4e20-a147-ede880707f2d}
+2026-11-14T00:39:32.8553530Z Region: eastus
+2026-11-14T00:39:32.8554642Z Cloud: Azure
+2026-11-14T00:39:32.8555825Z ##[endgroup]
+2026-11-14T00:39:32.8558240Z ##[group]Operating System
+2026-11-14T00:39:32.8559404Z Ubuntu
+2026-11-14T00:39:32.8560456Z 26.04.1
+2026-11-14T00:39:32.8561472Z LTS
+2026-11-14T00:39:32.8562459Z ##[endgroup]
+2026-11-14T00:39:32.8563581Z ##[group]Runner Image
+2026-11-14T00:39:32.8564655Z Image: ubuntu-26.04
+2026-11-14T00:39:32.8566044Z Version: 20261111.196.1
+2026-11-14T00:39:32.8568297Z Included Software: https://github.com/actions/runner-images/blob/ubuntu26/20261111.196/images/ubuntu/Ubuntu2604-Readme.md
+2026-11-14T00:39:32.8571040Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu26%2F20261111.196
+2026-11-14T00:39:32.8573197Z ##[endgroup]
+2026-11-14T00:39:32.8575200Z ##[group]GITHUB_TOKEN Permissions
+2026-11-14T00:39:32.8578355Z Contents: read
+2026-11-14T00:39:32.8579382Z Metadata: read
+2026-11-14T00:39:32.8580482Z ##[endgroup]
+2026-11-14T00:39:32.8583568Z Secret source: Actions
+2026-11-14T00:39:32.8585324Z Cache mode: write
+2026-11-14T00:39:32.8586821Z Prepare workflow directory
+2026-11-14T00:39:32.9095517Z Prepare all required actions
+2026-11-14T00:39:32.9171792Z Getting action download info
+2026-11-14T00:39:33.1093299Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-11-14T00:39:33.2523227Z Download action repository 'actions/setup-go@v5' (SHA:40f1582b2485089dde7abd97c1529aa768e1baff)
+2026-11-14T00:39:33.4372944Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-11-14T00:39:33.6309720Z Complete job name: quality-gate
+2026-11-14T00:39:33.7471979Z ##[group]Run actions/checkout@v4
+2026-11-14T00:39:33.7472882Z with:
+2026-11-14T00:39:33.7473410Z   fetch-depth: 0
+2026-11-14T00:39:33.7474145Z   repository: X-MuBai-X/d6-q06
+2026-11-14T00:39:33.7478805Z   token: ***
+2026-11-14T00:39:33.7479276Z   ssh-strict: true
+2026-11-14T00:39:33.7479714Z   ssh-user: git
+2026-11-14T00:39:33.7480155Z   persist-credentials: true
+2026-11-14T00:39:33.7480639Z   clean: true
+2026-11-14T00:39:33.7481083Z   sparse-checkout-cone-mode: true
+2026-11-14T00:39:33.7481600Z   fetch-tags: false
+2026-11-14T00:39:33.7482033Z   show-progress: true
+2026-11-14T00:39:33.7482471Z   lfs: false
+2026-11-14T00:39:33.7482885Z   submodules: false
+2026-11-14T00:39:33.7483337Z   set-safe-directory: true
+2026-11-14T00:39:33.7483836Z   allow-unsafe-pr-checkout: false
+2026-11-14T00:39:33.7485073Z ##[endgroup]
+2026-11-14T00:39:34.0228799Z Syncing repository: X-MuBai-X/d6-q06
+2026-11-14T00:39:34.0231588Z ##[group]Getting Git version info
+2026-11-14T00:39:34.0232880Z Working directory is '/home/runner/work/d6-q06/d6-q06'
+2026-11-14T00:39:34.0234619Z [command]/usr/bin/git version
+2026-11-14T00:39:34.0247041Z git version 2.56.1
+2026-11-14T00:39:34.0276560Z ##[endgroup]
+2026-11-14T00:39:34.0284306Z Temporarily overriding HOME='/home/runner/work/_temp/8b8c7f9f-59c0-4ecc-968d-2e9369702d21' before making global git config changes
+2026-11-14T00:39:34.0287032Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-14T00:39:34.0291037Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/d6-q06/d6-q06
+2026-11-14T00:39:34.0361903Z Deleting the contents of '/home/runner/work/d6-q06/d6-q06'
+2026-11-14T00:39:34.0366429Z ##[group]Initializing the repository
+2026-11-14T00:39:34.0372434Z [command]/usr/bin/git init /home/runner/work/d6-q06/d6-q06
+2026-11-14T00:39:34.0498540Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-14T00:39:34.0504515Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-14T00:39:34.0506421Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-14T00:39:34.0507542Z hint: call:
+2026-11-14T00:39:34.0508083Z hint:
+2026-11-14T00:39:34.0508694Z hint: 	git config --global init.defaultBranch <name>
+2026-11-14T00:39:34.0509426Z hint:
+2026-11-14T00:39:34.0510435Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-14T00:39:34.0512171Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-14T00:39:34.0513579Z hint:
+2026-11-14T00:39:34.0514324Z hint: 	git branch -m <name>
+2026-11-14T00:39:34.0514944Z hint:
+2026-11-14T00:39:34.0515957Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-14T00:39:34.0517107Z Initialized empty Git repository in /home/runner/work/d6-q06/d6-q06/.git/
+2026-11-14T00:39:34.0525956Z [command]/usr/bin/git remote add origin https://github.com/X-MuBai-X/d6-q06
+2026-11-14T00:39:34.0581604Z ##[endgroup]
+2026-11-14T00:39:34.0582453Z ##[group]Disabling automatic garbage collection
+2026-11-14T00:39:34.0586258Z [command]/usr/bin/git config --local gc.auto 0
+2026-11-14T00:39:34.0621429Z ##[endgroup]
+2026-11-14T00:39:34.0622620Z ##[group]Setting up auth
+2026-11-14T00:39:34.0630353Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-14T00:39:34.0668592Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-14T00:39:34.1152627Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-14T00:39:34.1196517Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-14T00:39:34.1498256Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-14T00:39:34.1528318Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-14T00:39:34.1811531Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-14T00:39:34.1853211Z ##[endgroup]
+2026-11-14T00:39:34.1854297Z ##[group]Fetching the repository
+2026-11-14T00:39:34.1864259Z [command]/usr/bin/git -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/* +5bc60233371e7c32603f97de6c571aba32135bd6:refs/remotes/pull/1/merge
+2026-11-14T00:39:34.5211202Z From https://github.com/X-MuBai-X/d6-q06
+2026-11-14T00:39:34.5213427Z  * [new branch]      dev/06                                   -> origin/dev/06
+2026-11-14T00:39:34.5215545Z  * [new branch]      main                                     -> origin/main
+2026-11-14T00:39:34.5218203Z  * [new ref]         5bc60233371e7c32603f97de6c571aba32135bd6 -> pull/1/merge
+2026-11-14T00:39:34.5224067Z ##[endgroup]
+2026-11-14T00:39:34.5226631Z ##[group]Determining the checkout info
+2026-11-14T00:39:34.5229331Z ##[endgroup]
+2026-11-14T00:39:34.5231240Z [command]/usr/bin/git sparse-checkout disable
+2026-11-14T00:39:34.5290139Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-14T00:39:34.5329471Z ##[group]Checking out the ref
+2026-11-14T00:39:34.5332338Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/1/merge
+2026-11-14T00:39:34.5470257Z Note: switching to 'refs/remotes/pull/1/merge'.
+2026-11-14T00:39:34.5471665Z 
+2026-11-14T00:39:34.5472573Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-11-14T00:39:34.5474599Z changes and commit them, and you can discard any commits you make in this
+2026-11-14T00:39:34.5477162Z state without impacting any branches by switching back to a branch.
+2026-11-14T00:39:34.5479466Z 
+2026-11-14T00:39:34.5480768Z If you want to create a new branch to retain commits you create, you may
+2026-11-14T00:39:34.5484216Z do so (now or later) by using -c with the switch command. Example:
+2026-11-14T00:39:34.5486189Z 
+2026-11-14T00:39:34.5487030Z   git switch -c <new-branch-name>
+2026-11-14T00:39:34.5488266Z 
+2026-11-14T00:39:34.5489016Z Or undo this operation with:
+2026-11-14T00:39:34.5490127Z 
+2026-11-14T00:39:34.5490786Z   git switch -
+2026-11-14T00:39:34.5491632Z 
+2026-11-14T00:39:34.5493004Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-11-14T00:39:34.5494993Z 
+2026-11-14T00:39:34.5496847Z HEAD is now at 5bc6023 Merge 4940ddc3eab5f0d8f48666a6d1c45876edd71f1f into 2e79dd495a80386709e77933279f2665108c4c90
+2026-11-14T00:39:34.5502178Z ##[endgroup]
+2026-11-14T00:39:34.5533017Z [command]/usr/bin/git log -1 --format=%H
+2026-11-14T00:39:34.5559454Z 5bc60233371e7c32603f97de6c571aba32135bd6
+2026-11-14T00:39:34.5962974Z ##[group]Run actions/setup-go@v5
+2026-11-14T00:39:34.5964240Z with:
+2026-11-14T00:39:34.5965139Z   go-version: 1.27
+2026-11-14T00:39:34.5966287Z   check-latest: false
+2026-11-14T00:39:34.5977860Z   token: ***
+2026-11-14T00:39:34.5978811Z   cache: true
+2026-11-14T00:39:34.5979716Z ##[endgroup]
+2026-11-14T00:39:34.7362552Z Setup go version spec 1.27
+2026-11-14T00:39:34.7415912Z Attempting to download 1.27...
+2026-11-14T00:39:34.7568897Z (node:2396) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-14T00:39:34.7570804Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-14T00:39:35.1351589Z matching 1.27...
+2026-11-14T00:39:35.1359304Z Acquiring 1.27.4 from https://github.com/actions/go-versions/releases/download/1.27.4-42945153609/go-1.27.4-linux-x64.tar.gz
+2026-11-14T00:39:35.7423793Z Extracting Go...
+2026-11-14T00:39:35.7575355Z [command]/usr/bin/tar xz --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/df6cdadc-cc8c-45d3-a60a-37dd7415d4b0 -f /home/runner/work/_temp/db27187c-a383-4ab6-a505-9f182ce280ec
+2026-11-14T00:39:36.9889882Z Successfully extracted go to /home/runner/work/_temp/df6cdadc-cc8c-45d3-a60a-37dd7415d4b0
+2026-11-14T00:39:36.9897402Z Adding to the cache ...
+2026-11-14T00:39:42.2572118Z Successfully cached go to /opt/hostedtoolcache/go/1.27.4/x64
+2026-11-14T00:39:42.2573474Z Added go to the path
+2026-11-14T00:39:42.2580118Z Successfully set up Go version 1.27
+2026-11-14T00:39:42.2871203Z [command]/opt/hostedtoolcache/go/1.27.4/x64/bin/go env GOMODCACHE
+2026-11-14T00:39:42.2950627Z [command]/opt/hostedtoolcache/go/1.27.4/x64/bin/go env GOCACHE
+2026-11-14T00:39:42.2995170Z /home/runner/go/pkg/mod
+2026-11-14T00:39:42.3017327Z /home/runner/.cache/go-build
+2026-11-14T00:39:42.3587936Z Cache is not found
+2026-11-14T00:39:42.3612586Z go version go1.27.4 linux/amd64
+2026-11-14T00:39:42.3613187Z 
+2026-11-14T00:39:42.3613919Z ##[group]go env
+2026-11-14T00:39:42.5155032Z AR='ar'
+2026-11-14T00:39:42.5155473Z CC='gcc'
+2026-11-14T00:39:42.5156113Z CGO_CFLAGS='-O2 -g'
+2026-11-14T00:39:42.5156510Z CGO_CPPFLAGS=''
+2026-11-14T00:39:42.5156877Z CGO_CXXFLAGS='-O2 -g'
+2026-11-14T00:39:42.5157256Z CGO_ENABLED='1'
+2026-11-14T00:39:42.5157613Z CGO_FFLAGS='-O2 -g'
+2026-11-14T00:39:42.5158065Z CGO_LDFLAGS='-O2 -g'
+2026-11-14T00:39:42.5158425Z CXX='g++'
+2026-11-14T00:39:42.5158745Z GCCGO='gccgo'
+2026-11-14T00:39:42.5159126Z GO111MODULE=''
+2026-11-14T00:39:42.5159475Z GOAMD64='v1'
+2026-11-14T00:39:42.5159804Z GOARCH='amd64'
+2026-11-14T00:39:42.5160146Z GOAUTH='netrc'
+2026-11-14T00:39:42.5160544Z GOBIN='/home/runner/go/bin'
+2026-11-14T00:39:42.5161033Z GOCACHE='/home/runner/.cache/go-build'
+2026-11-14T00:39:42.5161546Z GOCACHEPROG=''
+2026-11-14T00:39:42.5161886Z GODEBUG=''
+2026-11-14T00:39:42.5162245Z GOENV='/home/runner/.config/go/env'
+2026-11-14T00:39:42.5162678Z GOEXE=''
+2026-11-14T00:39:42.5162996Z GOEXPERIMENT=''
+2026-11-14T00:39:42.5163340Z GOFIPS140='off'
+2026-11-14T00:39:42.5163687Z GOFLAGS=''
+2026-11-14T00:39:42.5164902Z GOGCCFLAGS='-fPIC -m64 -pthread -Wl,--no-gc-sections -fmessage-length=0 -ffile-prefix-map=/tmp/go-build3991228727=/tmp/go-build -gno-record-gcc-switches'
+2026-11-14T00:39:42.5166738Z GOHOSTARCH='amd64'
+2026-11-14T00:39:42.5167112Z GOHOSTOS='linux'
+2026-11-14T00:39:42.5167463Z GOINSECURE=''
+2026-11-14T00:39:42.5167889Z GOMOD='/home/runner/work/d6-q06/d6-q06/go.mod'
+2026-11-14T00:39:42.5168446Z GOMODCACHE='/home/runner/go/pkg/mod'
+2026-11-14T00:39:42.5168898Z GONOPROXY=''
+2026-11-14T00:39:42.5169248Z GONOSUMDB=''
+2026-11-14T00:39:42.5169674Z GOOS='linux'
+2026-11-14T00:39:42.5170036Z GOPACKAGESDRIVER=''
+2026-11-14T00:39:42.5170421Z GOPATH='/home/runner/go'
+2026-11-14T00:39:42.5170802Z GOPRIVATE=''
+2026-11-14T00:39:42.5171253Z GOPROXY='https://proxy.golang.org,direct'
+2026-11-14T00:39:42.5171819Z GOROOT='/opt/hostedtoolcache/go/1.27.4/x64'
+2026-11-14T00:39:42.5172366Z GOSUMDB='sum.golang.org'
+2026-11-14T00:39:42.5172800Z GOTELEMETRY='local'
+2026-11-14T00:39:42.5173541Z GOTELEMETRYDIR='/home/runner/.config/go/telemetry'
+2026-11-14T00:39:42.5174115Z GOTMPDIR=''
+2026-11-14T00:39:42.5174445Z GOTOOLCHAIN='auto'
+2026-11-14T00:39:42.5174997Z GOTOOLDIR='/opt/hostedtoolcache/go/1.27.4/x64/pkg/tool/linux_amd64'
+2026-11-14T00:39:42.5175780Z GOVCS=''
+2026-11-14T00:39:42.5176145Z GOVERSION='go1.27.4'
+2026-11-14T00:39:42.5176530Z GOWORK=''
+2026-11-14T00:39:42.5176928Z PKG_CONFIG='pkg-config'
+2026-11-14T00:39:42.5177183Z 
+2026-11-14T00:39:42.5177983Z ##[endgroup]
+2026-11-14T00:39:42.5419635Z ##[group]Run echo "COMMIT_SHA=${GITHUB_SHA}" >> "$GITHUB_ENV"
+2026-11-14T00:39:42.5420149Z [36;1mecho "COMMIT_SHA=${GITHUB_SHA}" >> "$GITHUB_ENV"[0m
+2026-11-14T00:39:42.5476895Z shell: /usr/bin/bash -e {0}
+2026-11-14T00:39:42.5477200Z ##[endgroup]
+2026-11-14T00:39:42.5629065Z ##[group]Run out=$(gofmt -l .)
+2026-11-14T00:39:42.5629434Z [36;1mout=$(gofmt -l .)[0m
+2026-11-14T00:39:42.5629709Z [36;1mif [ -n "$out" ]; then[0m
+2026-11-14T00:39:42.5629978Z [36;1m  echo "gofmt 存在差异："[0m
+2026-11-14T00:39:42.5630229Z [36;1m  echo "$out"[0m
+2026-11-14T00:39:42.5630490Z [36;1m  exit 1[0m
+2026-11-14T00:39:42.5630691Z [36;1mfi[0m
+2026-11-14T00:39:42.5683137Z shell: /usr/bin/bash -e {0}
+2026-11-14T00:39:42.5683532Z env:
+2026-11-14T00:39:42.5683909Z   COMMIT_SHA: 5bc60233371e7c32603f97de6c571aba32135bd6
+2026-11-14T00:39:42.5684420Z ##[endgroup]
+2026-11-14T00:39:42.6077994Z ##[group]Run go vet ./...
+2026-11-14T00:39:42.6078309Z [36;1mgo vet ./...[0m
+2026-11-14T00:39:42.6128877Z shell: /usr/bin/bash -e {0}
+2026-11-14T00:39:42.6129158Z env:
+2026-11-14T00:39:42.6129412Z   COMMIT_SHA: 5bc60233371e7c32603f97de6c571aba32135bd6
+2026-11-14T00:39:42.6129729Z ##[endgroup]
+2026-11-14T00:39:42.6567268Z go: downloading modernc.org/sqlite v1.62.0
+2026-11-14T00:39:44.1702794Z go: downloading golang.org/x/sys v0.49.0
+2026-11-14T00:39:44.1712787Z go: downloading modernc.org/libc v1.80.1
+2026-11-14T00:39:45.4051373Z go: downloading modernc.org/mathutil v1.7.1
+2026-11-14T00:39:45.4052377Z go: downloading github.com/dustin/go-humanize v1.1.0
+2026-11-14T00:39:45.4053280Z go: downloading github.com/google/uuid v1.6.0
+2026-11-14T00:39:45.4053995Z go: downloading modernc.org/memory v1.12.1
+2026-11-14T00:39:45.4323798Z go: downloading github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec
+2026-11-14T00:40:17.0016301Z ##[group]Run go test -race ./... -count=1
+2026-11-14T00:40:17.0016704Z [36;1mgo test -race ./... -count=1[0m
+2026-11-14T00:40:17.0068618Z shell: /usr/bin/bash -e {0}
+2026-11-14T00:40:17.0068884Z env:
+2026-11-14T00:40:17.0069134Z   COMMIT_SHA: 5bc60233371e7c32603f97de6c571aba32135bd6
+2026-11-14T00:40:17.0069457Z ##[endgroup]
+2026-11-14T00:40:42.9841305Z ok  	creative-studio/cmd/mockgen	1.322s
+2026-11-14T00:41:05.0546986Z ok  	creative-studio/cmd/server	2.210s
+2026-11-14T00:41:05.0560431Z ok  	creative-studio/internal/domain	1.017s
+2026-11-14T00:41:06.1500409Z ok  	creative-studio/internal/httpapi	2.976s
+2026-11-14T00:41:06.9512859Z ok  	creative-studio/internal/service	3.777s
+2026-11-14T00:41:06.9513481Z ok  	creative-studio/internal/store	1.805s
+2026-11-14T00:41:06.9514478Z ok  	creative-studio/internal/supplier	1.024s
+2026-11-14T00:41:07.0859459Z ##[group]Run python3 scripts/coverage_gate.py --root . --out-dir evidence --min 85
+2026-11-14T00:41:07.0860108Z [36;1mpython3 scripts/coverage_gate.py --root . --out-dir evidence --min 85[0m
+2026-11-14T00:41:07.0910670Z shell: /usr/bin/bash -e {0}
+2026-11-14T00:41:07.0910921Z env:
+2026-11-14T00:41:07.0911164Z   COMMIT_SHA: 5bc60233371e7c32603f97de6c571aba32135bd6
+2026-11-14T00:41:07.0911474Z ##[endgroup]
+2026-11-14T00:41:17.4791638Z 题目 06 单元测试覆盖率门禁报告
+2026-11-14T00:41:17.4792491Z ============================================================
+2026-11-14T00:41:17.4793568Z 覆盖率剖面：/home/runner/work/d6-q06/d6-q06/evidence/coverage.out
+2026-11-14T00:41:17.4794367Z 统计口径：解析覆盖率剖面按语句数统计 covered/total（与 go tool cover 一致）
+2026-11-14T00:41:17.4794962Z 排除项：无（自编的数据库访问与 HTTP 处理代码全部纳入统计）
+2026-11-14T00:41:17.4795212Z 
+2026-11-14T00:41:17.4795376Z 【各包覆盖率】
+2026-11-14T00:41:17.4796048Z   creative-studio/cmd/mockgen               82.40%  (103/125)
+2026-11-14T00:41:17.4796877Z   creative-studio/cmd/server                62.50%  (30/48)
+2026-11-14T00:41:17.4797553Z   creative-studio/internal/domain           89.71%  (61/68)
+2026-11-14T00:41:17.4798246Z   creative-studio/internal/httpapi          84.26%  (332/394)
+2026-11-14T00:41:17.4798958Z   creative-studio/internal/service          86.41%  (426/493)
+2026-11-14T00:41:17.4799665Z   creative-studio/internal/store            86.80%  (309/356)
+2026-11-14T00:41:17.4800358Z   creative-studio/internal/supplier         87.10%  (27/31)
+2026-11-14T00:41:17.4800747Z 
+2026-11-14T00:41:17.4801005Z 【整体覆盖率】 85.02%  (1288/1515)
+2026-11-14T00:41:17.4801541Z   核心包 creative-studio/internal/domain     89.71%
+2026-11-14T00:41:17.4802172Z   核心包 creative-studio/internal/store      86.80%
+2026-11-14T00:41:17.4802804Z   核心包 creative-studio/internal/service    86.41%
+2026-11-14T00:41:17.4803431Z   核心包 creative-studio/internal/httpapi    84.26%
+2026-11-14T00:41:17.4804033Z   核心包 creative-studio/internal/supplier   87.10%
+2026-11-14T00:41:17.4804378Z 
+2026-11-14T00:41:17.4804558Z 【结论】FAIL
+2026-11-14T00:41:17.4805096Z   - 核心包 creative-studio/internal/httpapi 覆盖率 84.26% < 85.0%
+2026-11-14T00:41:17.4805489Z 
+2026-11-14T00:41:17.4892463Z ##[error]Process completed with exit code 1.
+2026-11-14T00:41:17.4977313Z ##[group]Run actions/upload-artifact@v4
+2026-11-14T00:41:17.4977614Z with:
+2026-11-14T00:41:17.4977810Z   name: coverage-evidence
+2026-11-14T00:41:17.4978136Z   path: evidence/coverage.out
+evidence/coverage-summary.txt
+
+2026-11-14T00:41:17.4978486Z   if-no-files-found: warn
+2026-11-14T00:41:17.4978710Z   compression-level: 6
+2026-11-14T00:41:17.4978921Z   overwrite: false
+2026-11-14T00:41:17.4979136Z   include-hidden-files: false
+2026-11-14T00:41:17.4979371Z env:
+2026-11-14T00:41:17.4979603Z   COMMIT_SHA: 5bc60233371e7c32603f97de6c571aba32135bd6
+2026-11-14T00:41:17.4979900Z ##[endgroup]
+2026-11-14T00:41:17.6700860Z (node:10929) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-14T00:41:17.6701754Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-14T00:41:17.6780204Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-11-14T00:41:17.6783084Z The least common ancestor is /home/runner/work/d6-q06/d6-q06/evidence. This will be the root directory of the artifact
+2026-11-14T00:41:17.6784517Z With the provided path, there will be 2 files uploaded
+2026-11-14T00:41:17.6786167Z Artifact name is valid!
+2026-11-14T00:41:17.6786970Z Root directory input is valid!
+2026-11-14T00:41:17.8849964Z Beginning upload of artifact content to blob storage
+2026-11-14T00:41:17.9083254Z (node:10929) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-14T00:41:17.9376474Z Uploaded bytes 8960
+2026-11-14T00:41:17.9542380Z Finished uploading artifact content to blob storage!
+2026-11-14T00:41:17.9544305Z SHA256 digest of uploaded artifact zip is a01dfc40a8ed29b14c3e8b979045adf0c39fa52e840c4fa3b12e34332ca865f5
+2026-11-14T00:41:17.9545469Z Finalizing artifact upload
+2026-11-14T00:41:18.2811515Z Artifact coverage-evidence.zip successfully finalized. Artifact ID 14088514157
+2026-11-14T00:41:18.2813305Z Artifact coverage-evidence has been successfully uploaded! Final size is 8960 bytes. Artifact ID is 14088514157
+2026-11-14T00:41:18.2821193Z Artifact download URL: https://github.com/X-MuBai-X/d6-q06/actions/runs/43535651446/artifacts/14088514157
+2026-11-14T00:41:18.3042111Z Post job cleanup.
+2026-11-14T00:41:18.3924966Z [command]/usr/bin/git version
+2026-11-14T00:41:18.3975856Z git version 2.56.1
+2026-11-14T00:41:18.4021730Z Temporarily overriding HOME='/home/runner/work/_temp/3796f9b1-e501-4d81-a487-597932f981a9' before making global git config changes
+2026-11-14T00:41:18.4022818Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-14T00:41:18.4027813Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/d6-q06/d6-q06
+2026-11-14T00:41:18.4076640Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-14T00:41:18.4116627Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-14T00:41:18.4437072Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-14T00:41:18.4468489Z http.https://github.com/.extraheader
+2026-11-14T00:41:18.4494203Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-14T00:41:18.4525939Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-14T00:41:18.4894199Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-14T00:41:18.4933208Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-14T00:41:18.5392906Z Cleaning up orphan processes
+2026-11-14T00:41:18.5841816Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-go@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

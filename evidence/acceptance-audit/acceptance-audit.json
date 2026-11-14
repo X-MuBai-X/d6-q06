@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-14T00:34:14.978084+00:00",
+  "generated_at": "2026-11-14T01:11:56.097433+00:00",
   "status": "待补证",
   "items": [
     {
@@ -17,7 +17,7 @@
       "rule": "R2",
       "name": "同一需求至多一个处理中任务且请求编号幂等",
       "status": "PASS",
-      "evidence": "internal/store/schema.sql 50: CREATE UNIQUE INDEX IF NOT EXISTS idx_one_processing_task；internal/service/requirement.go 118: if other, err := s.store.GetTaskByRequestNoTx(ctx, tx, requestNo); err == nil {",
+      "evidence": "internal/store/schema.sql 50: CREATE UNIQUE INDEX IF NOT EXISTS idx_one_processing_task；internal/service/requirement.go 118: if other, err := s.store.GetTaskByRequestNoTx(ctx, tx, requestNo); err == nil {；已校验 (requirement_id, request_no) 复合唯一索引与幂等命中的需求归属",
       "verify": "无需复验，结论已由证据支撑"
     },
     {
@@ -143,7 +143,7 @@
       "rule": "§6.1",
       "name": "单元测试语句覆盖率整体与各核心包均达标",
       "status": "PASS",
-      "evidence": "evidence/coverage-summary.txt 结论为 PASS",
+      "evidence": "按 scripts/coverage_gate.py 从原始剖面复算，结论为 PASS（剖面不早于源码）",
       "verify": "无需复验，结论已由证据支撑"
     },
     {
@@ -151,9 +151,9 @@
       "category": "共同要求",
       "rule": "§2/§10",
       "name": "五组完整工作场景实测通过",
-      "status": "PASS",
-      "evidence": "evidence/scenario-verify.log 显示全部场景断言通过",
-      "verify": "无需复验，结论已由证据支撑"
+      "status": "待补证",
+      "evidence": "场景日志早于最新源码（证据文件时间 1794618566 < 最新源码时间 1794618659），结论可能过期",
+      "verify": "重跑 python scripts/verify_scenarios.py 并归档输出"
     },
     {
       "id": "T-01",
@@ -188,7 +188,7 @@
       "rule": "§3/§8",
       "name": "证据与文档中无明文口令、密钥与令牌",
       "status": "PASS",
-      "evidence": "全量扫描 evidence/ 与 docs/ 未命中（无白名单、无例外目录；已知凭据值比对 1 项 + 8 类形态正则）",
+      "evidence": "全量扫描 evidence/ 与 docs/ 未命中（无白名单、无例外目录；已知凭据值比对 1 项 + 16 类形态正则）",
       "verify": "无需复验，结论已由证据支撑"
     },
     {

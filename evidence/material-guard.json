@@ -1,6 +1,6 @@
 {
   "status": "PASS",
-  "db": "C:\\Users\\26765\\Documents\\trae_projects\\skills\\2组\\素材\\d6\\data\\run8.db",
+  "db": "C:\\Users\\26765\\Documents\\trae_projects\\skills\\2组\\素材\\d6\\data\\run9.db",
   "checks": [
     {
       "id": "G1",
@@ -117,7 +117,7 @@
   ],
   "coverage": {
     "status": "PASS",
-    "report": "题目 06 单元测试覆盖率门禁报告\r\n============================================================\r\n覆盖率剖面：C:\\Users\\26765\\Documents\\trae_projects\\skills\\2组\\素材\\d6\\evidence\\coverage.out\r\n统计口径：解析覆盖率剖面按语句数统计 covered/total（与 go tool cover 一致）\r\n排除项：无（自编的数据库访问与 HTTP 处理代码全部纳入统计）\r\n\r\n【各包覆盖率】\r\n  creative-studio/cmd/mockgen               80.65%  (125/155)\r\n  creative-studio/cmd/server                56.34%  (40/71)\r\n  creative-studio/internal/domain           89.71%  (61/68)\r\n  creative-studio/internal/httpapi          89.51%  (529/591)\r\n  creative-studio/internal/service          86.76%  (439/506)\r\n  creative-studio/internal/store            86.80%  (309/356)\r\n  creative-studio/internal/supplier         87.10%  (27/31)\r\n\r\n【整体覆盖率】 86.05%  (1530/1778)\r\n  核心包 creative-studio/internal/domain     89.71%\r\n  核心包 creative-studio/internal/store      86.80%\r\n  核心包 creative-studio/internal/service    86.76%\r\n  核心包 creative-studio/internal/httpapi    89.51%\r\n  核心包 creative-studio/internal/supplier   87.10%\r\n\r\n【结论】PASS（整体与各核心包均 ≥ 85.0%）\r\n"
+    "report": "题目 06 单元测试覆盖率门禁报告\r\n============================================================\r\n覆盖率剖面：C:\\Users\\26765\\Documents\\trae_projects\\skills\\2组\\素材\\d6\\evidence\\coverage.out\r\n统计口径：逐包执行 go test -coverprofile 后按块去重汇总\r\n  · 语句口径：按剖面 numstmt 统计（题面要求的语句覆盖率）\r\n  · 块口径：已覆盖代码块 / 总代码块，跨平台一致，作为保守下界\r\n  · 两种口径同时达标才算通过（避免本机通过而 CI 失败）\r\n排除项：无（自编的数据库访问与 HTTP 处理代码全部纳入统计）\r\n\r\n【各包覆盖率】\r\n  creative-studio/cmd/mockgen              语句  80.65%  块  80.65%  (125/155 ; 50/62)\r\n  creative-studio/cmd/server               语句  56.34%  块  74.07%  (40/71 ; 20/27)\r\n  creative-studio/internal/domain          语句  89.71%  块  88.52%  (61/68 ; 54/61)\r\n  creative-studio/internal/httpapi         语句  98.98%  块  98.45%  (585/591 ; 254/258)\r\n  creative-studio/internal/service         语句  98.02%  块  97.25%  (496/506 ; 354/364)\r\n  creative-studio/internal/store           语句  99.72%  块  99.61%  (355/356 ; 255/256)\r\n  creative-studio/internal/supplier        语句  96.77%  块  95.45%  (30/31 ; 21/22)\r\n\r\n【整体覆盖率】 语句 95.16%  块 96.00%  (1692/1778 ; 1008/1050)\r\n  核心包 creative-studio/internal/domain    语句  89.71%  块  88.52%\r\n  核心包 creative-studio/internal/store     语句  99.72%  块  99.61%\r\n  核心包 creative-studio/internal/service   语句  98.02%  块  97.25%\r\n  核心包 creative-studio/internal/httpapi   语句  98.98%  块  98.45%\r\n  核心包 creative-studio/internal/supplier  语句  96.77%  块  95.45%\r\n\r\n【结论】PASS（整体与各核心包均 ≥ 85.0%）\r\n"
   },
-  "generated_at": "2026-11-14T00:33:33.591422+00:00"
+  "generated_at": "2026-11-14T01:09:31.252513+00:00"
 }
