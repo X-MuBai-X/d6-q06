@@ -11,6 +11,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -86,6 +87,16 @@ func main() {
 
 // run 启动模拟供应商并阻塞直到上下文结束。
 func run(ctx context.Context, cfg config) error {
+	ln, err := net.Listen("tcp", cfg.addr)
+	if err != nil {
+		return err
+	}
+	return serve(ctx, cfg, ln)
+}
+
+// serve 在已经监听的端口上提供模拟供应商服务。
+// 监听与服务逻辑分离，便于测试使用动态端口（127.0.0.1:0），避免并行运行时端口冲突。
+func serve(ctx context.Context, cfg config, ln net.Listener) error {
 	m := newMock(cfg.callbackURL, cfg.secret)
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /v1/tasks", m.handleSubmit)
@@ -95,7 +106,7 @@ func run(ctx context.Context, cfg config) error {
 		writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 	})
 
-	server := &http.Server{Addr: cfg.addr, Handler: mux, ReadHeaderTimeout: 10 * time.Second}
+	server := &http.Server{Handler: mux, ReadHeaderTimeout: 10 * time.Second}
 	go func() {
 		<-ctx.Done()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -103,8 +114,8 @@ func run(ctx context.Context, cfg config) error {
 		_ = server.Shutdown(shutdownCtx)
 	}()
 
-	log.Printf("模拟生成供应商已启动，地址 http://127.0.0.1%s，回调目标 %s", cfg.addr, cfg.callbackURL)
-	err := server.ListenAndServe()
+	log.Printf("模拟生成供应商已启动，地址 http://%s，回调目标 %s", ln.Addr().String(), cfg.callbackURL)
+	err := server.Serve(ln)
 	if errors.Is(err, http.ErrServerClosed) {
 		return nil
 	}

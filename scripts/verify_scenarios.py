@@ -5,6 +5,21 @@
 用法：
     python scripts/verify_scenarios.py --base http://127.0.0.1:8080 --mock http://127.0.0.1:8090
 
+教学时钟（重要）：
+    平台的生成时限由启动参数 -clock-scale 决定。
+      * 默认 -clock-scale 1：时限为题面规定的 60 秒，脚本按 60 秒口径等待超时判定，
+        S3 一项最长需要约 75 秒，其余场景不受影响。
+      * 演示用 -clock-scale 0.1：时限缩短为 6 秒，脚本的等待窗口是「条件成立即返回」，
+        因此同样的脚本在 0.1 倍率下会更快通过，无需修改任何断言。
+    脚本不依赖时钟倍率，任何倍率下都按题面口径判定。
+
+预置账号口令（重要）：
+    演示口令的完整值只保留在 cmd/server/main.go（AGENTS.md §5 第 4 条），
+    脚本内不内置该明文，只使用与演示口令不同的测试专用口令 TEST_PASSWORD。
+    * 默认使用脚本内的测试专用口令，对应平台需以 `-seed-password TestOnly@2026` 启动；
+    * 也可用命令行 `--password` 或环境变量 STUDIO_PASSWORD 显式指定平台口令；
+    * 若平台以默认演示口令启动，脚本会打印提示并回退到 cmd/server/main.go 中的演示口令。
+
 脚本只依赖标准库，逐条断言场景结论并把过程打印到标准输出；
 退出码非 0 表示存在未通过的场景断言。
 """
@@ -12,12 +27,39 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import re
 import sys
 import time
 import urllib.error
 import urllib.request
 
-PASSWORD = "Studio@2026"
+# 测试专用口令：与 cmd/server/main.go 中的演示口令不同，仅用于本脚本与自动化测试。
+TEST_PASSWORD = "TestOnly@2026"
+
+# 题面 R3 规定的生成时限（秒）：60 秒内没有有效终态即判超时。
+TASK_TIMEOUT_SECONDS = 60
+# 等待超时判定成立的窗口（秒）：
+# 题面 60 秒时限 + 平台超时巡检间隔（默认 5 秒）+ 余量，保证默认时钟下也能等到判定结果。
+TASK_TIMEOUT_WAIT_SECONDS = TASK_TIMEOUT_SECONDS + 15
+
+# 需要登录的预置账号。
+ACCOUNTS = ("demand-a", "demand-b", "review-a", "ops-a")
+
+
+def demo_password_from_source() -> str | None:
+    """从 cmd/server/main.go 读取演示口令的真实值（脚本内不硬编码该明文）。
+
+    返回 None 表示读不到来源文件（例如脚本被单独拷贝到别处）。
+    """
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "cmd", "server", "main.go")
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            content = fh.read()
+    except OSError:
+        return None
+    matched = re.search(r'demoPassword\s*=\s*"([^"]+)"', content)
+    return matched.group(1) if matched else None
 
 
 class Client:
@@ -49,8 +91,10 @@ class Client:
             raise AssertionError(f"{method} {path} 期望状态码 {expect}，实际 {status}：{body[:300]}")
         return status, parsed
 
-    def login(self, account: str) -> "Client":
-        status, body = self.request("POST", "/api/login", {"login": account, "password": PASSWORD}, expect=200)
+    def login(self, account: str, password: str) -> "Client":
+        status, body = self.request("POST", "/api/login", {"login": account, "password": password})
+        if status != 200:
+            raise AssertionError(f"账号 {account} 登录失败，状态码 {status}：{str(body)[:200]}")
         self.token = body["token"]
         return self
 
@@ -190,7 +234,7 @@ def scenario_s3_failure(clients: dict, mock: Client, ck: Checks) -> None:
     # 3.3 超时
     set_mode(mock, "timeout")
     demand.request("POST", f"/api/requirements/{rid}/generations", {"request_no": f"s3-timeout-{rid}"}, expect=202)
-    ok = wait_for(lambda: requirement_status(demand, rid) == "exhausted", timeout=25)
+    ok = wait_for(lambda: requirement_status(demand, rid) == "exhausted", timeout=TASK_TIMEOUT_WAIT_SECONDS)
     ck.check("S3 第三次未成功后达到次数上限", ok, f"status={requirement_status(demand, rid)}")
     _, detail = demand.request("GET", f"/api/requirements/{rid}", expect=200)
     ck.check("S3 三次历史均可追溯", len(detail["detail"]["tasks"]) == 3)
@@ -281,17 +325,45 @@ def scenario_s5_concurrency(clients: dict, mock: Client, ck: Checks) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="题目 06 五组完整业务场景验证")
-    parser.add_argument("--base", default="http://127.0.0.1:8080")
-    parser.add_argument("--mock", default="http://127.0.0.1:8090")
+    parser = argparse.ArgumentParser(
+        description="题目 06 五组完整业务场景验证",
+        epilog=(
+            "教学时钟说明：平台默认 -clock-scale 1（题面 60 秒时限），"
+            "脚本按 60 秒口径等待超时判定（S3 最长约 75 秒）；"
+            "若平台以 -clock-scale 0.1 启动（6 秒时限），脚本会因条件成立提前返回，断言不变。\n"
+            "口令说明：脚本默认使用测试专用口令（平台需以 -seed-password 指定同一口令）；"
+            "也可用 --password 或环境变量 STUDIO_PASSWORD 指定平台口令。"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument("--base", default="http://127.0.0.1:8080", help="平台地址")
+    parser.add_argument("--mock", default="http://127.0.0.1:8090", help="模拟生成供应商地址")
+    parser.add_argument("--password", default=None,
+                        help="预置账号口令（默认取环境变量 STUDIO_PASSWORD，其次用脚本内置的测试专用口令）")
     args = parser.parse_args()
 
-    clients = {
-        "demand-a": Client(args.base).login("demand-a"),
-        "demand-b": Client(args.base).login("demand-b"),
-        "review-a": Client(args.base).login("review-a"),
-        "ops-a": Client(args.base).login("ops-a"),
-    }
+    demo_password = demo_password_from_source()
+    if demo_password is not None and demo_password == TEST_PASSWORD:
+        print("[FAIL] 测试专用口令必须与 cmd/server/main.go 中的演示口令不同")
+        return 2
+
+    if args.password:
+        password, source = args.password, "命令行 --password"
+    elif os.environ.get("STUDIO_PASSWORD"):
+        password, source = os.environ["STUDIO_PASSWORD"], "环境变量 STUDIO_PASSWORD"
+    else:
+        password, source = TEST_PASSWORD, "脚本内置测试专用口令"
+    print(f"预置账号口令来源：{source}")
+
+    try:
+        clients = {account: Client(args.base).login(account, password) for account in ACCOUNTS}
+    except AssertionError as exc:
+        if demo_password is None or password == demo_password:
+            print(f"[FAIL] 登录失败：{exc}")
+            return 2
+        print("[提示] 测试专用口令登录失败，回退使用 cmd/server/main.go 中的演示口令"
+              "（平台以默认口令启动时的兼容路径）")
+        clients = {account: Client(args.base).login(account, demo_password) for account in ACCOUNTS}
     mock = Client(args.mock)
     ck = Checks()
     scenario_s1_normal(clients, mock, ck)

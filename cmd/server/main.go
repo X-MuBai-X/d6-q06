@@ -32,6 +32,7 @@ type config struct {
 	supplierTimeout time.Duration
 	clockScale      float64
 	sweepInterval   time.Duration
+	seedPassword    string
 }
 
 func main() {
@@ -43,6 +44,7 @@ func main() {
 	flag.DurationVar(&cfg.supplierTimeout, "supplier-timeout", 10*time.Second, "单次提交供应商的超时")
 	flag.Float64Var(&cfg.clockScale, "clock-scale", 1, "教学时钟倍率（1=题面规定的 60 秒；0.1=演示用 6 秒）")
 	flag.DurationVar(&cfg.sweepInterval, "sweep-interval", 5*time.Second, "超时巡检间隔")
+	flag.StringVar(&cfg.seedPassword, "seed-password", demoPassword, "预置账号口令（默认取本文件内置的演示口令，测试与脚本请指定专用口令）")
 	flag.Parse()
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -71,7 +73,7 @@ func run(ctx context.Context, cfg config) error {
 		SupplierTimeout: cfg.supplierTimeout,
 		ClockScale:      cfg.clockScale,
 	})
-	if err := seed(svc); err != nil {
+	if err := seed(svc, cfg.seedPassword); err != nil {
 		return err
 	}
 
@@ -109,7 +111,7 @@ func run(ctx context.Context, cfg config) error {
 }
 
 // seed 预置两个需求人、一个设计复核人与一个运营账号。
-func seed(svc *service.Service) error {
+func seed(svc *service.Service, password string) error {
 	accounts := []struct {
 		id   string
 		name string
@@ -121,7 +123,7 @@ func seed(svc *service.Service) error {
 		{"ops-a", "运营甲", domain.RoleOperator},
 	}
 	for _, a := range accounts {
-		if err := svc.SeedUser(context.Background(), a.id, a.name, a.role, demoPassword); err != nil {
+		if err := svc.SeedUser(context.Background(), a.id, a.name, a.role, password); err != nil {
 			return fmt.Errorf("预置账号 %s 失败: %w", a.id, err)
 		}
 	}

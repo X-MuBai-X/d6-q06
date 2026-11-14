@@ -182,7 +182,7 @@ func TestReworkFlowOverAPI(t *testing.T) {
 func TestPageLoginAndRequirementRendering(t *testing.T) {
 	h := newHarness(t)
 	resp := h.doPageResp(t, http.MethodPost, "/login", "", url.Values{
-		"login": {"demand-a"}, "password": {"Studio@2026"}, "next": {"/workbench"},
+		"login": {"demand-a"}, "password": {testPassword}, "next": {"/workbench"},
 	})
 	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusSeeOther {

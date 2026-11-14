@@ -88,7 +88,17 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/supplier/callback", s.apiSupplierCallback)
 	mux.HandleFunc("GET /healthz", s.healthz)
 
-	return s.recoverMiddleware(mux)
+	return s.recoverMiddleware(s.bodyDrainMiddleware(mux))
+}
+
+// bodyDrainMiddleware 在处理完请求后把请求体读干净。
+// 兜底措施：任何写接口如果没有消费请求体，net/http 会在关闭连接时向客户端发送 TCP 复位，
+// 客户端可能因此丢失已经生成的响应（见 evidence/independent-test-report.md D-03）。
+func (s *Server) bodyDrainMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer drainBody(r)
+		next.ServeHTTP(w, r)
+	})
 }
 
 // recoverMiddleware 把未预期异常转换成 500，且不向调用方透出内部细节。

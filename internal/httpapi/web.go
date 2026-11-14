@@ -87,6 +87,10 @@ func (s *Server) pageLoginSubmit(w http.ResponseWriter, r *http.Request) {
 
 // pageLogout 注销并回到登录页。
 func (s *Server) pageLogout(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "表单解析失败", http.StatusBadRequest)
+		return
+	}
 	if c, err := r.Cookie("studio_session"); err == nil {
 		_ = s.svc.Logout(r.Context(), c.Value)
 	}
@@ -196,6 +200,10 @@ func (s *Server) formCreateRequirement(w http.ResponseWriter, r *http.Request) {
 
 // formUpdateDescription 处理修改描述表单。
 func (s *Server) formUpdateDescription(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "表单解析失败", http.StatusBadRequest)
+		return
+	}
 	s.redirectWithResult(w, r, func() error {
 		return s.svc.UpdateDescription(r.Context(), currentUser(r), r.PathValue("id"), r.PostFormValue("description"))
 	}, "描述已更新")
@@ -233,6 +241,10 @@ func (s *Server) formReview(w http.ResponseWriter, r *http.Request) {
 
 // formAdopt 处理确认采用表单。
 func (s *Server) formAdopt(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "表单解析失败", http.StatusBadRequest)
+		return
+	}
 	s.redirectWithResult(w, r, func() error {
 		_, err := s.svc.Adopt(r.Context(), currentUser(r), r.PathValue("id"), r.PostFormValue("candidate_id"))
 		return err
@@ -251,7 +263,12 @@ func (s *Server) formRework(w http.ResponseWriter, r *http.Request) {
 }
 
 // formWithdraw 处理撤销表单。
+// 表单不消费请求体时必须显式解析，否则请求体残留会导致客户端收到 TCP 复位。
 func (s *Server) formWithdraw(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "表单解析失败", http.StatusBadRequest)
+		return
+	}
 	s.redirectWithResult(w, r, func() error {
 		return s.svc.Withdraw(r.Context(), currentUser(r), r.PathValue("id"))
 	}, "需求已撤销")

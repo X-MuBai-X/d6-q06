@@ -56,7 +56,7 @@ func newHarness(t *testing.T) *harness {
 		role domain.Role
 	}{{"demand-a", domain.RoleRequester}, {"demand-b", domain.RoleRequester},
 		{"review-a", domain.RoleReviewer}, {"ops-a", domain.RoleOperator}} {
-		if err := svc.SeedUser(t.Context(), u.id, u.id, u.role, "Studio@2026"); err != nil {
+		if err := svc.SeedUser(t.Context(), u.id, u.id, u.role, testPassword); err != nil {
 			t.Fatalf("预置账号失败: %v", err)
 		}
 	}
@@ -76,7 +76,7 @@ func newHarness(t *testing.T) *harness {
 
 func (h *harness) login(t *testing.T, account string) string {
 	t.Helper()
-	body := strings.NewReader(`{"login":"` + account + `","password":"Studio@2026"}`)
+	body := strings.NewReader(`{"login":"` + account + `","password":"` + testPassword + `"}`)
 	resp, err := http.Post(h.server.URL+"/api/login", "application/json", body)
 	if err != nil {
 		t.Fatalf("登录请求失败: %v", err)
@@ -181,7 +181,7 @@ func (h *harness) doPageResp(t *testing.T, method, path, account string, form ur
 func TestLoginAPI(t *testing.T) {
 	h := newHarness(t)
 	resp, err := http.Post(h.server.URL+"/api/login", "application/json",
-		strings.NewReader(`{"login":"demand-a","password":"Studio@2026"}`))
+		strings.NewReader(`{"login":"demand-a","password":"`+testPassword+`"}`))
 	if err != nil {
 		t.Fatalf("登录失败: %v", err)
 	}

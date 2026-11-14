@@ -17,6 +17,17 @@ func readBody(r *http.Request) ([]byte, error) {
 	return io.ReadAll(io.LimitReader(r.Body, 1<<20))
 }
 
+// drainBody 读干请求体。
+// Go 的 net/http 在请求体未被读完时关闭连接会向客户端发送 TCP 复位，
+// 客户端可能因此丢失已经生成的响应（见 evidence/independent-test-report.md D-03）。
+// 所有写接口在处理前都要把请求体读干净。
+func drainBody(r *http.Request) {
+	if r == nil || r.Body == nil {
+		return
+	}
+	_, _ = io.Copy(io.Discard, io.LimitReader(r.Body, 1<<20))
+}
+
 // decodeJSON 解析 JSON 请求体。
 func decodeJSON(r *http.Request, target any) error {
 	body, err := readBody(r)
@@ -179,7 +190,9 @@ func (s *Server) apiRework(w http.ResponseWriter, r *http.Request) {
 }
 
 // apiWithdraw 撤销需求。
+// 该接口不消费请求体，必须先读干，否则客户端带请求体调用时会偶发收到 TCP 复位。
 func (s *Server) apiWithdraw(w http.ResponseWriter, r *http.Request) {
+	drainBody(r)
 	if err := s.svc.Withdraw(r.Context(), currentUser(r), r.PathValue("id")); err != nil {
 		writeJSONError(w, statusForError(err), errorMessage(err))
 		return

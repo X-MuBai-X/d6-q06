@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -179,19 +180,53 @@ func TestDeliverSignsCallback(t *testing.T) {
 }
 
 func TestRunStartsAndStops(t *testing.T) {
+	// 使用动态端口，避免并行运行时与其它实例争抢固定端口。
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("监听动态端口失败: %v", err)
+	}
+	addr := ln.Addr().String()
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan error, 1)
 	go func() {
-		done <- run(ctx, config{addr: "127.0.0.1:18099", callbackURL: "http://127.0.0.1:1/callback", secret: "s"})
+		done <- serve(ctx, config{addr: addr, callbackURL: "http://127.0.0.1:1/callback", secret: "s"}, ln)
+	}()
+	// 等待服务就绪
+	var resp *http.Response
+	for i := 0; i < 50; i++ {
+		resp, err = http.Get("http://" + addr + "/healthz")
+		if err == nil {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	if err != nil {
+		cancel()
+		t.Fatalf("健康检查失败: %v", err)
+	}
+	_ = resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("健康检查应返回 200，实际 %d", resp.StatusCode)
+	}
+	cancel()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatalf("正常退出不应报错: %v", err)
+		}
+	case <-time.After(10 * time.Second):
+		t.Fatal("服务未在预期时间内退出")
+	}
+}
+
+// TestRunAcceptsDynamicPort 覆盖 run 走动态端口（127.0.0.1:0）的启动路径。
+func TestRunAcceptsDynamicPort(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() {
+		done <- run(ctx, config{addr: "127.0.0.1:0", callbackURL: "http://127.0.0.1:1/callback", secret: "s"})
 	}()
 	time.Sleep(300 * time.Millisecond)
-	resp, err := http.Get("http://127.0.0.1:18099/healthz")
-	if err == nil {
-		_ = resp.Body.Close()
-		if resp.StatusCode != http.StatusOK {
-			t.Fatalf("健康检查应返回 200，实际 %d", resp.StatusCode)
-		}
-	}
 	cancel()
 	select {
 	case err := <-done:
